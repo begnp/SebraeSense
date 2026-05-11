@@ -1,8 +1,8 @@
 import React from 'react';
 import { AlertTriangle, Clock } from 'lucide-react';
 
-interface QueueUser {
-  id: string;
+export interface QueueUser {
+  id: number | string;
   initials: string;
   name: string;
   company: string;
@@ -12,14 +12,11 @@ interface QueueUser {
   date: string;
 }
 
-const mockUsers: QueueUser[] = [
-  { id: '1', initials: 'JS', name: 'João Santos', company: 'Tech Norte LTDA', score: 18, reason: '3 erros consecutivos no cadastro', alertCount: 3, date: '5 de abr.' },
-  { id: '2', initials: 'MS', name: 'Maria Silva', company: 'Padaria Estrela', score: 18, reason: 'Inatividade de 30 dias + tarefa abandonada', alertCount: 3, date: '7 de abr.' },
-  { id: '3', initials: 'AC', name: 'Ana Costa', company: 'Confecções Sol', score: 18, reason: 'Abandono em tarefa crítica', alertCount: 3, date: '6 de abr.' },
-  { id: '4', initials: 'MS', name: 'Maria Silva', company: 'Padaria Estrela', score: 18, reason: 'Inatividade de 30 dias + tarefa abandonada', alertCount: 3, date: '7 de abr.' },
-];
+interface PriorityQueueProps {
+  users: QueueUser[];
+}
 
-export const PriorityQueue = () => {
+export const PriorityQueue: React.FC<PriorityQueueProps> = ({ users }) => {
   return (
     <div className="bg-transparent rounded-xl flex flex-col h-full">
       <div className="flex justify-between items-center mb-4">
@@ -33,7 +30,7 @@ export const PriorityQueue = () => {
       </div>
 
       <div className="flex flex-col gap-3">
-        {mockUsers.map((user, index) => (
+        {users.map((user, index) => (
           <div key={index} className="bg-white p-4 rounded-xl shadow-sm border border-transparent hover:border-red-100 transition-colors">
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center gap-3">

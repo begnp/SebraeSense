@@ -10,17 +10,16 @@ import {
 } from 'recharts';
 import { Activity } from 'lucide-react';
 
-const data = [
-  { name: '01', chs: 40 },
-  { name: '05', chs: 30 },
-  { name: '10', chs: 45 },
-  { name: '15', chs: 50 },
-  { name: '20', chs: 45 },
-  { name: '25', chs: 60 },
-  { name: '30', chs: 55 },
-];
+export interface ChartDataPoint {
+  name: string;
+  chs: number;
+}
 
-export const ChartWidget = () => {
+interface ChartWidgetProps {
+  data: ChartDataPoint[];
+}
+
+export const ChartWidget: React.FC<ChartWidgetProps> = ({ data }) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm h-full flex flex-col">
       <div className="flex items-center gap-3 mb-6">

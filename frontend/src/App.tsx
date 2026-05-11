@@ -4,44 +4,33 @@ import { StatCard } from './components/dashboard/StatCard';
 import { PriorityQueue } from './components/dashboard/PriorityQueue';
 import { UserHighlightCard } from './components/dashboard/UserHighlightCard';
 import { ChartWidget } from './components/dashboard/ChartWidget';
-import { AlertTriangle, Eye, Leaf } from 'lucide-react';
+import { AlertTriangle, Eye, Leaf, Loader2 } from 'lucide-react';
+import { useDashboardData } from './hooks/useDashboardData';
 
 function App() {
-  const highlightUsers = [
-    {
-      initials: 'JS',
-      name: 'João Santos',
-      company: 'Tech Norte LTDA',
-      score: 18,
-      alertCount: 5,
-      reason: '3 erros consecutivos no cadastro',
-      engagement: 20,
-      progression: 40,
-      success: 30,
-    },
-    {
-      initials: 'JS',
-      name: 'João Santos',
-      company: 'Tech Norte LTDA',
-      score: 18,
-      alertCount: 5,
-      reason: '3 erros consecutivos no cadastro',
-      engagement: 30,
-      progression: 45,
-      success: 25,
-    },
-    {
-      initials: 'JS',
-      name: 'João Santos',
-      company: 'Tech Norte LTDA',
-      score: 18,
-      alertCount: 5,
-      reason: '3 erros consecutivos no cadastro',
-      engagement: 15,
-      progression: 30,
-      success: 10,
-    },
-  ];
+  const { data, loading, error } = useDashboardData();
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="animate-spin text-[#6B4C9A]" size={48} />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-full flex-col text-red-500">
+          <AlertTriangle size={48} className="mb-4" />
+          <h2 className="text-xl font-bold">Erro ao carregar os dados</h2>
+          <p>{error}</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -56,21 +45,21 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
             icon={<AlertTriangle size={32} />}
-            count={68}
+            count={data.stats.risks}
             title="riscos"
             subtitle="Em risco: ação imediata"
             colorScheme="red"
           />
           <StatCard
             icon={<Eye size={32} />}
-            count={94}
+            count={data.stats.attention}
             title="em atenção"
             subtitle="Monitorar"
             colorScheme="yellow"
           />
           <StatCard
             icon={<Leaf size={32} />}
-            count={85}
+            count={data.stats.healthy}
             title="saudáveis"
             subtitle="Saudáveis: sem ação necessária"
             colorScheme="green"
@@ -81,21 +70,21 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
           {/* Left Column - Priority Queue */}
           <div className="lg:col-span-4 flex flex-col">
-            <PriorityQueue />
+            <PriorityQueue users={data.queue} />
           </div>
 
           {/* Right Column - Highlights & Chart */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             {/* Highlight Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
-              {highlightUsers.map((user, index) => (
-                <UserHighlightCard key={index} {...user} />
+              {data.highlights.map((user) => (
+                <UserHighlightCard key={user.id} {...user} />
               ))}
             </div>
 
             {/* Chart Row */}
             <div className="h-64 mt-auto">
-              <ChartWidget />
+              <ChartWidget data={data.chart} />
             </div>
           </div>
         </div>
