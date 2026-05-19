@@ -1,4 +1,5 @@
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { StatCard } from './components/dashboard/StatCard';
 import { PriorityQueue } from './components/dashboard/PriorityQueue';
@@ -6,8 +7,9 @@ import { UserHighlightCard } from './components/dashboard/UserHighlightCard';
 import { ChartWidget } from './components/dashboard/ChartWidget';
 import { AlertTriangle, Eye, Leaf, Loader2 } from 'lucide-react';
 import { useDashboardData } from './hooks/useDashboardData';
+import { CustomerProfile } from './pages/CustomerProfile';
 
-function App() {
+function Dashboard() {
   const { data, loading, error } = useDashboardData();
 
   if (loading) {
@@ -68,21 +70,15 @@ function App() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
-          {/* Left Column - Priority Queue */}
           <div className="lg:col-span-4 flex flex-col">
             <PriorityQueue users={data.queue} />
           </div>
-
-          {/* Right Column - Highlights & Chart */}
           <div className="lg:col-span-8 flex flex-col gap-6">
-            {/* Highlight Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
               {data.highlights.map((user) => (
                 <UserHighlightCard key={user.id} {...user} />
               ))}
             </div>
-
-            {/* Chart Row */}
             <div className="h-64 mt-auto">
               <ChartWidget data={data.chart} />
             </div>
@@ -90,6 +86,15 @@ function App() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/clientes/:id" element={<CustomerProfile />} />
+    </Routes>
   );
 }
 
