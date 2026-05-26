@@ -8,6 +8,9 @@ import { ChartWidget } from './components/dashboard/ChartWidget';
 import { AlertTriangle, Eye, Leaf, Loader2 } from 'lucide-react';
 import { useDashboardData } from './hooks/useDashboardData';
 import { CustomerProfile } from './pages/CustomerProfile';
+import { MiniSebraeHome } from './pages/sebrae/MiniSebraeHome';
+import { MiniSebraeTask } from './pages/sebrae/MiniSebraeTask';
+import { TrackerViewer } from './components/TrackerViewer';
 
 function Dashboard() {
   const { data, loading, error } = useDashboardData();
@@ -91,10 +94,15 @@ function Dashboard() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/clientes/:id" element={<CustomerProfile />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/clientes/:id" element={<CustomerProfile />} />
+        <Route path="/sebrae" element={<MiniSebraeHome />} />
+        <Route path="/sebrae/tarefa" element={<MiniSebraeTask />} />
+      </Routes>
+      <TrackerViewer />
+    </>
   );
 }
 

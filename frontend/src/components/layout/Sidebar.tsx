@@ -1,5 +1,5 @@
-import React from 'react';
-import { LayoutDashboard, Users, Bell, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LayoutDashboard, Users, Bell, LogOut, MonitorPlay } from 'lucide-react';
 
 export const Sidebar = () => {
   return (
@@ -31,6 +31,12 @@ export const Sidebar = () => {
               <Bell size={20} />
               <span className="font-medium text-sm">Alertas</span>
             </a>
+          </li>
+          <li>
+            <Link to="/sebrae" className="flex items-center gap-3 px-6 py-3 text-gray-300 hover:bg-white/5 transition-colors">
+              <MonitorPlay size={20} />
+              <span className="font-medium text-sm">Acessar Mini Sebrae</span>
+            </Link>
           </li>
         </ul>
       </nav>
