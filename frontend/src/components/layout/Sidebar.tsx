@@ -1,7 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Bell, LogOut, MonitorPlay } from 'lucide-react';
 
 export const Sidebar = () => {
+  const navigate = useNavigate();
+  const userName = localStorage.getItem("user_name") || "Usuário";
+  const initials = userName.split(" ").map(name => name[0]).slice(0, 2).join("").toUpperCase();
+  const handleLogout = () => {localStorage.removeItem("token");navigate("/login");};
+
   return (
     <aside className="w-64 bg-[#1A2530] text-white flex flex-col h-screen fixed left-0 top-0">
       <div className="p-6">
@@ -45,14 +50,14 @@ export const Sidebar = () => {
       <div className="bg-[#34B4A6] p-4 m-4 rounded-xl flex items-center justify-between mt-auto">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-[#1A2530] flex items-center justify-center text-xs font-bold">
-            MM
+            {initials}
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-[#1A2530] leading-tight">Marcela Menezes</span>
-            <span className="text-[10px] text-[#1A2530] font-medium opacity-80">Analista CX</span>
+            <span className="text-sm font-bold text-[#1A2530] leading-tight">{userName}</span>
+            <span className="text-[10px] text-[#1A2530] font-medium opacity-80">Conectado</span>
           </div>
         </div>
-        <button className="text-[#1A2530] hover:text-white transition-colors">
+        <button onClick={handleLogout}className="text-[#1A2530] hover:text-white transition-colors">
           <LogOut size={18} />
         </button>
       </div>

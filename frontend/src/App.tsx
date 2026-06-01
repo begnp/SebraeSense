@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { StatCard } from './components/dashboard/StatCard';
 import { PriorityQueue } from './components/dashboard/PriorityQueue';
@@ -11,10 +11,12 @@ import { CustomerProfile } from './pages/CustomerProfile';
 import { MiniSebraeHome } from './pages/sebrae/MiniSebraeHome';
 import { MiniSebraeTask } from './pages/sebrae/MiniSebraeTask';
 import { TrackerViewer } from './components/TrackerViewer';
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
 
 function Dashboard() {
   const { data, loading, error } = useDashboardData();
-
+  const userName = localStorage.getItem("user_name") || "Usuário";
   if (loading) {
     return (
       <MainLayout>
@@ -42,7 +44,7 @@ function Dashboard() {
       <div className="flex flex-col h-full gap-6">
         {/* Header Section */}
         <div>
-          <h1 className="text-3xl font-bold text-[#1A2530]">Olá, Marcela.</h1>
+          <h1 className="text-3xl font-bold text-[#1A2530]">Olá, {userName}.</h1>
           <p className="text-gray-600 mt-1">Monitore os usuários do Sebrae em tempo real.</p>
         </div>
 
@@ -92,14 +94,26 @@ function Dashboard() {
   );
 }
 
+function PrivateRoute({ children }: { children: JSX.Element }) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/"element={<PrivateRoute><Dashboard /></PrivateRoute>}/>
         <Route path="/clientes/:id" element={<CustomerProfile />} />
         <Route path="/sebrae" element={<MiniSebraeHome />} />
         <Route path="/sebrae/tarefa" element={<MiniSebraeTask />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
       <TrackerViewer />
     </>

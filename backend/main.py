@@ -4,6 +4,8 @@ from database import engine, Base, SessionLocal
 from routers import dashboard
 from models.customer import Customer
 from models.alert import Alert
+from routers import auth
+from models.user import User
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -20,6 +22,7 @@ app.add_middleware(
 )
 
 # Registra as rotas
+app.include_router(auth.router)
 app.include_router(dashboard.router)
 
 @app.on_event("startup")
