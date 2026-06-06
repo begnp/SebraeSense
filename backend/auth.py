@@ -1,6 +1,6 @@
 # auth.py
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -23,7 +23,7 @@ def verify_password(password, hashed):
 def create_access_token(user_id):
     payload = {
         "sub": str(user_id),
-        "exp": datetime.utcnow() + timedelta(days=1)
+        "exp": datetime.now(timezone.utc) + timedelta(days=1)
     }
 
     return jwt.encode(

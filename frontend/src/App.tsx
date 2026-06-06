@@ -17,6 +17,7 @@ import { Register } from "./pages/Register";
 function Dashboard() {
   const { data, loading, error } = useDashboardData();
   const userName = localStorage.getItem("user_name") || "Usuário";
+
   if (loading) {
     return (
       <MainLayout>
@@ -42,13 +43,12 @@ function Dashboard() {
   return (
     <MainLayout>
       <div className="flex flex-col h-full gap-6">
-        {/* Header Section */}
+
         <div>
           <h1 className="text-3xl font-bold text-[#1A2530]">Olá, {userName}.</h1>
           <p className="text-gray-600 mt-1">Monitore os usuários do Sebrae em tempo real.</p>
         </div>
 
-        {/* Top KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
             icon={<AlertTriangle size={32} />}
@@ -73,7 +73,6 @@ function Dashboard() {
           />
         </div>
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
           <div className="lg:col-span-4 flex flex-col">
             <PriorityQueue users={data.queue} />
@@ -89,6 +88,7 @@ function Dashboard() {
             </div>
           </div>
         </div>
+
       </div>
     </MainLayout>
   );
@@ -108,10 +108,10 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/"element={<PrivateRoute><Dashboard /></PrivateRoute>}/>
-        <Route path="/clientes/:id" element={<CustomerProfile />} />
-        <Route path="/sebrae" element={<MiniSebraeHome />} />
-        <Route path="/sebrae/tarefa" element={<MiniSebraeTask />} />
+        <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/clientes/:id" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
+        <Route path="/sebrae" element={<PrivateRoute><MiniSebraeHome /></PrivateRoute>} />
+        <Route path="/sebrae/tarefa" element={<PrivateRoute><MiniSebraeTask /></PrivateRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>
