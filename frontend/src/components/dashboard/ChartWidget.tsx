@@ -32,22 +32,31 @@ export const ChartWidget: React.FC<ChartWidgetProps> = ({ data }) => {
       
       <div className="flex-1 w-full min-h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+          <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-            <XAxis dataKey="name" hide />
+            <XAxis 
+              dataKey="name" 
+              tick={{ fontSize: 12, fill: '#9CA3AF' }}
+              axisLine={false}
+              tickLine={false}
+            />
             <YAxis 
               axisLine={false} 
-              tickLine={false} 
-              ticks={[25, 50, 75, 100]} 
+              tickLine={false}
+              domain={['auto', 'auto']}
               tick={{ fontSize: 12, fill: '#9CA3AF' }}
             />
-            <Tooltip />
+            <Tooltip 
+              formatter={(value: number) => [`CHS: ${value}`, '']}
+              labelFormatter={(label) => `Dia ${label}`}
+            />
             <Line 
               type="monotone" 
               dataKey="chs" 
               stroke="#EAB308" 
               strokeWidth={3} 
               dot={false}
+              activeDot={{ r: 5, fill: '#EAB308' }}
             />
           </LineChart>
         </ResponsiveContainer>
