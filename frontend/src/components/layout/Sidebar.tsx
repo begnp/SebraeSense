@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Bell, LogOut, ChevronUp, User, List } from 'lucide-react';
+import { LayoutDashboard, Users, Bell, LogOut, ChevronUp, User, List, Building } from 'lucide-react';
 import { Logo } from './Logo';
 
 export const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
@@ -87,6 +87,19 @@ export const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
             >
               <Users size={18} />
               <span>Clientes</span>
+            </Link>
+          </li>
+          <li>
+            <Link 
+              to="/sebrae" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/sebrae') 
+                  ? 'bg-[#6B4C9A] text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Building size={18} />
+              <span>Mini Sebrae</span>
             </Link>
           </li>
         </ul>

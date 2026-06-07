@@ -71,8 +71,8 @@ export function Register() {
           </h2>
 
           {/* Register Form Card */}
-          <form onSubmit={handleRegister} className="w-full flex flex-col gap-6">
-            <div className="bg-[#D9D9D9] rounded-[24px] p-8 flex flex-col gap-5 shadow-lg border border-transparent">
+          <form onSubmit={handleRegister} className="w-full flex flex-col gap-6 items-center">
+            <div className="bg-[#D9D9D9] rounded-[24px] p-8 flex flex-col gap-5 shadow-lg border border-transparent w-full">
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-[#0E1B2B]">
                   Nome
@@ -114,19 +114,18 @@ export function Register() {
                   className="bg-white rounded-lg px-4 py-3 text-sm text-[#0E1B2B] outline-none border border-transparent focus:border-[#0E1B2B] transition-all placeholder-gray-400"
                 />
               </div>
-            </div>
 
-            {error && (
-              <p className="text-red-700 text-sm text-center bg-red-100/80 rounded-lg py-2 px-4 border border-red-200">
-                {error}
-              </p>
-            )}
+              {error && (
+                <p className="text-red-700 text-xs text-center bg-red-100/90 rounded-lg py-2 px-3 border border-red-200 mt-2">
+                  {error}
+                </p>
+              )}
 
-            <div className="flex flex-col items-center gap-4 w-full">
-              <div className="flex items-center justify-between w-full px-2">
+              {/* Action Buttons inside the gray card */}
+              <div className="flex items-center justify-between w-full mt-4">
                 <Link
                   to="/login"
-                  className="text-xs text-[#0E1B2B] font-bold hover:underline transition-all cursor-pointer"
+                  className="text-sm text-[#0E1B2B] font-bold hover:underline transition-all cursor-pointer"
                 >
                   Já tenho conta
                 </Link>
@@ -134,7 +133,7 @@ export function Register() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-8 py-3 rounded-lg text-sm font-bold text-white transition-all disabled:opacity-50 cursor-pointer shadow-md bg-[#0E1B2B] hover:bg-[#152a42]"
+                  className="px-8 py-2.5 rounded-lg text-sm font-bold text-white transition-all disabled:opacity-50 cursor-pointer shadow-md bg-[#0E1B2B] hover:bg-[#152a42]"
                 >
                   {loading ? "Cadastrando..." : "Cadastrar"}
                 </button>
