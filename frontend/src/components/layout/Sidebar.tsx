@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Bell, LogOut, ChevronUp, User, List } from 'lucide-react';
 import { Logo } from './Logo';
 
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const userName = localStorage.getItem("user_name") || "Usuário";
@@ -26,7 +26,9 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-[#0E1B2B] text-white flex flex-col h-screen fixed left-0 top-0 z-20 border-r border-gray-800">
+    <aside className={`w-64 bg-[#0E1B2B] text-white flex flex-col h-screen fixed left-0 top-0 z-20 border-r border-gray-800 transition-transform duration-300 ${
+      isOpen ? 'translate-x-0' : '-translate-x-full'
+    }`}>
       {/* Brand Logo Container */}
       <div className="p-6">
         <Logo />
