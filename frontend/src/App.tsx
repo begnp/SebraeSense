@@ -13,6 +13,8 @@ import { MiniSebraeTask } from './pages/sebrae/MiniSebraeTask';
 import { TrackerViewer } from './components/TrackerViewer';
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { Profile } from "./pages/Profile";
+import { Settings } from "./pages/Settings";
 
 function Dashboard() {
   const { data, loading, error } = useDashboardData();
@@ -114,6 +116,8 @@ function App() {
         <Route path="/sebrae/tarefa" element={<PrivateRoute><MiniSebraeTask /></PrivateRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/configuracoes" element={<PrivateRoute><Settings /></PrivateRoute>} />
       </Routes>
       <TrackerViewer />
     </>
