@@ -84,12 +84,15 @@ function GaugeChart({ value }: { value: number }) {
   const angle = 180 - percent * 180; // 180 is left (100), 0 is right (900)
 
   const rad = (angle * Math.PI) / 180;
-  const r = 85;
   const cx = 110;
   const cy = 100;
 
-  const needleX = cx + (r - 15) * Math.cos(rad);
-  const needleY = cy - (r - 15) * Math.sin(rad);
+  const rStart = 62;
+  const rEnd = 80;
+  const needleX1 = cx + rStart * Math.cos(rad);
+  const needleY1 = cy - rStart * Math.sin(rad);
+  const needleX2 = cx + rEnd * Math.cos(rad);
+  const needleY2 = cy - rEnd * Math.sin(rad);
 
   return (
     <div className="relative flex flex-col items-center justify-center">
@@ -112,35 +115,62 @@ function GaugeChart({ value }: { value: number }) {
           strokeLinecap="round"
         />
 
-        {/* Needle */}
-        <line
-          x1={cx}
-          y1={cy}
-          x2={needleX}
-          y2={needleY}
-          stroke="#0E1B2B"
-          strokeWidth="4"
-          strokeLinecap="round"
-        />
-        <circle cx={cx} cy={cy} r="6" fill="#0E1B2B" />
-
         {/* Labels */}
         <text x="18" y="118" fontSize="9" fill="#9CA3AF" fontWeight="bold">100</text>
         <text x="50" y="52" fontSize="9" fill="#9CA3AF" fontWeight="bold">350</text>
         <text x="110" y="22" fontSize="9" fill="#9CA3AF" fontWeight="bold" textAnchor="middle">500</text>
         <text x="170" y="52" fontSize="9" fill="#9CA3AF" fontWeight="bold">750</text>
         <text x="192" y="118" fontSize="9" fill="#9CA3AF" fontWeight="bold">900</text>
-      </svg>
 
-      {/* Absolute Value & Pill Overlay */}
-      <div className="absolute bottom-1 flex flex-col items-center">
-        <span className="text-4xl font-extrabold text-[#0E1B2B] tracking-tight leading-none mb-1">
+        {/* Value inside SVG */}
+        <text 
+          x="110" 
+          y="94" 
+          textAnchor="middle" 
+          fontSize="30" 
+          fontWeight="900" 
+          fill="#0E1B2B"
+          style={{ fontFamily: 'sans-serif' }}
+        >
           {value}
-        </span>
-        <div className="flex items-center gap-1 bg-[#FEF08A] text-[#854D0E] font-extrabold text-[10px] uppercase px-3 py-1 rounded-full border border-yellow-200">
-          Em Risco
-        </div>
-      </div>
+        </text>
+
+        {/* Status Pill Background inside SVG */}
+        <rect 
+          x="73" 
+          y="105" 
+          width="74" 
+          height="18" 
+          rx="9" 
+          fill="#FEF08A" 
+          stroke="#FEF08A" 
+          strokeWidth="1" 
+        />
+        
+        {/* Status Pill Text inside SVG */}
+        <text 
+          x="110" 
+          y="117" 
+          textAnchor="middle" 
+          fontSize="8" 
+          fontWeight="900" 
+          fill="#854D0E"
+          style={{ fontFamily: 'sans-serif', letterSpacing: '0.05em' }}
+        >
+          EM RISCO
+        </text>
+
+        {/* Needle - Shorter tick segment */}
+        <line
+          x1={needleX1}
+          y1={needleY1}
+          x2={needleX2}
+          y2={needleY2}
+          stroke="#0E1B2B"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+      </svg>
     </div>
   );
 }
