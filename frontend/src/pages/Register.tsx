@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Logo } from '../components/layout/Logo';
 
 export function Register() {
   const navigate = useNavigate();
@@ -37,19 +38,14 @@ export function Register() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Painel esquerdo — escuro com logo */}
+    <div className="min-h-screen flex font-sans">
+      {/* Left panel — dark blue/slate with Sebrae Sense logo */}
       <div
         className="hidden md:flex w-1/2 flex-col justify-between p-12"
-        style={{ backgroundColor: "#1A2530" }}
+        style={{ backgroundColor: "#0E1B2B" }}
       >
         <div>
-          <p className="text-xs font-bold tracking-widest text-[#4ECDC4] uppercase mb-1">
-            SEBRAE
-          </p>
-          <h1 className="text-5xl font-black text-white tracking-tight">
-            <span className="text-[#4ECDC4]">S</span>ENSE
-          </h1>
+          <Logo />
         </div>
 
         <div>
@@ -59,39 +55,26 @@ export function Register() {
         </div>
       </div>
 
-      {/* Painel direito */}
+      {/* Right panel — vibrant cyan with register card */}
       <div
-        className="flex w-full md:w-1/2 flex-col items-center justify-center p-8"
-        style={{ backgroundColor: "#4ECDC4" }}
+        className="flex w-full md:w-1/2 flex-col items-center justify-center p-8 bg-[#3CDAB6]"
       >
-        {/* Logo mobile */}
-        <div className="md:hidden mb-8 text-center">
-          <p className="text-xs font-bold tracking-widest text-[#1A2530] uppercase mb-1">
-            SEBRAE
-          </p>
-          <h1 className="text-4xl font-black text-white tracking-tight">
-            <span className="text-[#1A2530]">S</span>ENSE
-          </h1>
+        {/* Mobile logo (visible only on small screens) */}
+        <div className="md:hidden mb-6 flex justify-center">
+          <Logo light={true} />
         </div>
 
-        <div className="w-full max-w-sm">
-          <h2
-            className="text-2xl font-bold mb-8 text-center"
-            style={{ color: "#1A2530" }}
-          >
+        <div className="w-full max-w-sm flex flex-col items-center">
+          {/* Header text outside of the register card */}
+          <h2 className="text-2xl font-bold mb-6 text-[#0E1B2B]">
             Crie sua conta
           </h2>
 
-          <form onSubmit={handleRegister} className="flex flex-col gap-5">
-            <div
-              className="rounded-2xl p-6 flex flex-col gap-4"
-              style={{ backgroundColor: "#D1EDE9" }}
-            >
+          {/* Register Form Card */}
+          <form onSubmit={handleRegister} className="w-full flex flex-col gap-6">
+            <div className="bg-[#D9D9D9] rounded-[24px] p-8 flex flex-col gap-5 shadow-lg border border-transparent">
               <div className="flex flex-col gap-1">
-                <label
-                  className="text-xs font-bold uppercase tracking-wider"
-                  style={{ color: "#1A2530" }}
-                >
+                <label className="text-xs font-extrabold uppercase tracking-wider text-[#0E1B2B]">
                   Nome
                 </label>
                 <input
@@ -100,16 +83,12 @@ export function Register() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="bg-white rounded-lg px-4 py-3 text-sm outline-none border-2 border-transparent focus:border-[#1A2530] transition-all"
-                  style={{ color: "#1A2530" }}
+                  className="bg-white rounded-lg px-4 py-3 text-sm text-[#0E1B2B] outline-none border border-transparent focus:border-[#0E1B2B] transition-all placeholder-gray-400"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label
-                  className="text-xs font-bold uppercase tracking-wider"
-                  style={{ color: "#1A2530" }}
-                >
+                <label className="text-xs font-extrabold uppercase tracking-wider text-[#0E1B2B]">
                   Email
                 </label>
                 <input
@@ -118,16 +97,12 @@ export function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white rounded-lg px-4 py-3 text-sm outline-none border-2 border-transparent focus:border-[#1A2530] transition-all"
-                  style={{ color: "#1A2530" }}
+                  className="bg-white rounded-lg px-4 py-3 text-sm text-[#0E1B2B] outline-none border border-transparent focus:border-[#0E1B2B] transition-all placeholder-gray-400"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label
-                  className="text-xs font-bold uppercase tracking-wider"
-                  style={{ color: "#1A2530" }}
-                >
+                <label className="text-xs font-extrabold uppercase tracking-wider text-[#0E1B2B]">
                   Senha
                 </label>
                 <input
@@ -136,34 +111,34 @@ export function Register() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-white rounded-lg px-4 py-3 text-sm outline-none border-2 border-transparent focus:border-[#1A2530] transition-all"
-                  style={{ color: "#1A2530" }}
+                  className="bg-white rounded-lg px-4 py-3 text-sm text-[#0E1B2B] outline-none border border-transparent focus:border-[#0E1B2B] transition-all placeholder-gray-400"
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-red-700 text-sm text-center bg-red-100 rounded-lg py-2 px-4">
+              <p className="text-red-700 text-sm text-center bg-red-100/80 rounded-lg py-2 px-4 border border-red-200">
                 {error}
               </p>
             )}
 
-            <div className="flex items-center justify-between gap-4">
-              <Link
-                to="/login"
-                className="text-sm text-[#1A2530] underline underline-offset-2 opacity-70 hover:opacity-100 transition-opacity"
-              >
-                Já tenho conta
-              </Link>
+            <div className="flex flex-col items-center gap-4 w-full">
+              <div className="flex items-center justify-between w-full px-2">
+                <Link
+                  to="/login"
+                  className="text-xs text-[#0E1B2B] font-bold hover:underline transition-all cursor-pointer"
+                >
+                  Já tenho conta
+                </Link>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 rounded-lg text-sm font-bold text-white transition-all disabled:opacity-50"
-                style={{ backgroundColor: "#1A2530" }}
-              >
-                {loading ? "Cadastrando..." : "Cadastrar"}
-              </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-3 rounded-lg text-sm font-bold text-white transition-all disabled:opacity-50 cursor-pointer shadow-md bg-[#0E1B2B] hover:bg-[#152a42]"
+                >
+                  {loading ? "Cadastrando..." : "Cadastrar"}
+                </button>
+              </div>
             </div>
           </form>
         </div>

@@ -1,7 +1,6 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTracker } from '../../hooks/useTracker';
-import { ArrowRight, BookOpen, Briefcase, Lightbulb, TrendingUp } from 'lucide-react';
+import { ArrowRight, BookOpen, Briefcase, TrendingUp } from 'lucide-react';
 
 export function MiniSebraeHome() {
   // Use tracker to monitor behavior on the home page as well

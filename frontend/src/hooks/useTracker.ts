@@ -36,7 +36,7 @@ export function useTracker({ pageName }: TrackerOptions) {
 
   useEffect(() => {
     // Rage Clicks (Fricção)
-    const handleGlobalClick = (e: MouseEvent) => {
+    const handleGlobalClick = (_e: MouseEvent) => {
       const now = Date.now();
       
       if (now - clickData.current.lastClickTime > 2000) {

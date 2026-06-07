@@ -2,23 +2,24 @@
 
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 
 SECRET_KEY = "SEBRAE_SECRET_KEY"
 
 ALGORITHM = "HS256"
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+def hash_password(password: str) -> str:
+    pwd_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode('utf-8')
 
-def hash_password(password):
-    return pwd_context.hash(password[:72])
-
-def verify_password(password, hashed):
-    return pwd_context.verify(password[:72], hashed)
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    except Exception:
+        return False
 
 def create_access_token(user_id):
     payload = {

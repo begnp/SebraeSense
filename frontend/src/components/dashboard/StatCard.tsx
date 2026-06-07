@@ -4,28 +4,31 @@ interface StatCardProps {
   icon: React.ReactNode;
   count: number | string;
   title: string;
-  subtitle: string;
-  colorScheme: 'red' | 'yellow' | 'green';
+  colorScheme: 'red' | 'yellow' | 'green' | 'grey';
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ icon, count, title, subtitle, colorScheme }) => {
+export const StatCard: React.FC<StatCardProps> = ({ icon, count, title, colorScheme }) => {
   const colors = {
-    red: { text: 'text-red-500', bg: 'bg-white' },
-    yellow: { text: 'text-yellow-500', bg: 'bg-white' },
-    green: { text: 'text-green-500', bg: 'bg-white' },
+    grey: { iconBg: 'bg-gray-100 text-gray-500' },
+    red: { iconBg: 'bg-red-100 text-red-500' },
+    yellow: { iconBg: 'bg-yellow-100 text-yellow-500' },
+    green: { iconBg: 'bg-green-100 text-green-500' },
   };
 
   return (
-    <div className={`rounded-xl p-6 flex items-center gap-6 shadow-sm ${colors[colorScheme].bg}`}>
-      <div className={`p-1 ${colors[colorScheme].text}`}>
+    <div className="bg-white rounded-[16px] p-5 flex items-center gap-4 shadow-[0_4px_20px_rgba(52,180,166,0.04)] border border-gray-100/50">
+      {/* Icon Circle */}
+      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${colors[colorScheme].iconBg}`}>
         {icon}
       </div>
-      <div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-[#1A2530]">{count}</span>
-          <span className="text-lg font-bold text-[#1A2530]">{title}</span>
-        </div>
-        <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+      {/* Text Info */}
+      <div className="flex flex-col">
+        <span className="text-3xl font-extrabold text-[#0E1B2B] leading-none mb-1">
+          {count}
+        </span>
+        <span className="text-xs font-semibold text-gray-400 capitalize">
+          {title}
+        </span>
       </div>
     </div>
   );
