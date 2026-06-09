@@ -4,7 +4,7 @@ from database import engine, Base, SessionLocal
 from routers import dashboard
 from models.customer import Customer
 from models.alert import Alert
-from routers import auth
+from routers import auth, dashboard, telemetry
 from models.user import User
 
 # Create database tables
@@ -15,7 +15,7 @@ app = FastAPI(title="SENSE MVP API")
 # Configuração CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,6 +24,7 @@ app.add_middleware(
 # Registra as rotas
 app.include_router(auth.router)
 app.include_router(dashboard.router)
+app.include_router(telemetry.router)
 
 @app.on_event("startup")
 def seed_database():

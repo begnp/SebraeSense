@@ -4,6 +4,24 @@ interface TrackerOptions {
   pageName: string;
 }
 
+const sendTelemetryToServer = async (eventType: string, payload: any) => {
+  try {
+    await fetch('http://localhost:8000/api/telemetry/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        customer_id: 1, // Default to João Santos (ID 1)
+        event_type: eventType,
+        metadata_payload: payload
+      })
+    });
+  } catch (err) {
+    console.error('Erro ao enviar telemetria para o servidor:', err);
+  }
+};
+
 const dispatchVisualLog = (message: string, type: 'info' | 'warn' | 'error') => {
   // Mantém o console.log original
   if (type === 'warn') console.warn(message);
@@ -26,12 +44,14 @@ export function useTracker({ pageName }: TrackerOptions) {
     if (isTaskCompleted.current) return;
     const timeSpent = (Date.now() - startTime.current) / 1000;
     dispatchVisualLog(`[TTV] Tarefa concluída na página "${pageName}". Tempo total: ${timeSpent.toFixed(2)}s`, 'info');
+    sendTelemetryToServer('task_completed', { page: pageName, timeSpent });
     isTaskCompleted.current = true;
   }, [pageName]);
 
   // Errors and Interruptions
   const logError = useCallback((errorDetails: string) => {
     dispatchVisualLog(`[ERRO/INTERRUPÇÃO] Ocorreu um erro na página "${pageName}": ${errorDetails}`, 'error');
+    sendTelemetryToServer('error', { page: pageName, details: errorDetails });
   }, [pageName]);
 
   useEffect(() => {
@@ -50,6 +70,7 @@ export function useTracker({ pageName }: TrackerOptions) {
 
       if (clickData.current.count >= 5) {
         dispatchVisualLog(`🚨 [RAGE CLICK DETECTED] na página "${pageName}". Fricção detectada: múltiplos cliques seguidos!`, 'warn');
+        sendTelemetryToServer('rage_click', { page: pageName });
         // Reset to avoid spamming the console
         clickData.current.count = 0;
       }
@@ -60,6 +81,7 @@ export function useTracker({ pageName }: TrackerOptions) {
       // e.clientY <= 0 generally means the user moved the mouse towards the browser tabs/address bar
       if (e.clientY <= 0 && !isTaskCompleted.current) {
         dispatchVisualLog(`⚠️ [ABANDONO DETECTADO] Usuário moveu o mouse para fora da janela antes de concluir a tarefa.`, 'warn');
+        sendTelemetryToServer('abandonment', { page: pageName });
       }
     };
 
