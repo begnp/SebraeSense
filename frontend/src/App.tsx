@@ -48,25 +48,25 @@ function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             icon={<Info size={22} />}
-            count={247} // Matches screenshot value exactly
+            count={data.stats.risks + data.stats.attention + data.stats.healthy}
             title="Clientes totais"
             colorScheme="grey"
           />
           <StatCard
             icon={<AlertTriangle size={22} />}
-            count={68} // Matches screenshot value exactly
+            count={data.stats.risks}
             title="Em risco"
             colorScheme="red"
           />
           <StatCard
             icon={<Eye size={22} />}
-            count={94} // Matches screenshot value exactly
+            count={data.stats.attention}
             title="Em atenção"
             colorScheme="yellow"
           />
           <StatCard
             icon={<ShieldCheck size={22} />}
-            count={85} // Matches screenshot value exactly
+            count={data.stats.healthy}
             title="Saudáveis"
             colorScheme="green"
           />
@@ -137,7 +137,7 @@ function Dashboard() {
 
           {/* Right Column (Span 4) */}
           <div className="lg:col-span-4">
-            <PriorityQueue />
+            <PriorityQueue users={data.queue} />
           </div>
 
         </div>

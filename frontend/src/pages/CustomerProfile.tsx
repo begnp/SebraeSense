@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import {
-  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2
+  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2, Loader2
 } from 'lucide-react';
 
 interface ScoreItem { value: number; max: number; color: 'yellow' | 'red' | 'green'; }
@@ -26,54 +27,7 @@ interface CustomerData {
   processes: ProcessItem[];
 }
 
-const MOCK_CUSTOMERS: Record<string, CustomerData> = {
-  '1': {
-    id: 1,
-    name: 'João Santos',
-    company: 'Tech Norte LTDA',
-    phone: '81 99403-0293',
-    email: 'joaosantos@gmail.com',
-    status: 'Em Risco',
-    score: 569,
-    scores: {
-      frequencia: { value: 48, max: 100, color: 'yellow' },
-      progressao: { value: 20, max: 100, color: 'red' },
-      retorno: { value: 65, max: 100, color: 'green' },
-      engajamento: { value: 54, max: 100, color: 'yellow' },
-    },
-    timeline: [
-      { title: 'Abandono no formulário de crédito', time: 'Hoje, 10h30', type: 'alert' },
-      { title: '3 buscas repetidas por "Linha de crédito"', time: 'Ontem, 14h02', type: 'eye' },
-      { title: 'Concluiu consultoria de gestão financeira', time: '12 de Março', type: 'check' }
-    ],
-    processes: [
-      { id: '#1038', title: 'Dúvida sobre documentação MEI', period: 'Hoje', dots: ['green', 'green', 'gray'] },
-      { id: '#1037', title: 'Erro na emissão de nota fiscal', period: 'Esta semana', dots: ['yellow', 'yellow', 'gray'] }
-    ]
-  },
-  '2': {
-    id: 2,
-    name: 'Maria Silva',
-    company: 'Padaria Estrela',
-    phone: '(81) 99876-5432',
-    email: 'maria@padariastrela.com',
-    status: 'Em Risco',
-    score: 310,
-    scores: {
-      frequencia: { value: 30, max: 100, color: 'red' },
-      progressao: { value: 15, max: 100, color: 'red' },
-      retorno: { value: 40, max: 100, color: 'yellow' },
-      engajamento: { value: 25, max: 100, color: 'red' },
-    },
-    timeline: [
-      { title: 'Inatividade prolongada de 30 dias', time: 'Hoje, 09h15', type: 'alert' },
-      { title: 'Abandono em formulário crítico', time: 'Ontem, 16h45', type: 'alert' }
-    ],
-    processes: [
-      { id: '#1040', title: 'Reativação de conta', period: 'Hoje', dots: ['green', 'gray', 'gray'] }
-    ]
-  }
-};
+
 
 // Gauge (velocímetro) SVG
 function GaugeChart({ value }: { value: number }) {
@@ -203,7 +157,57 @@ export function CustomerProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const customer = MOCK_CUSTOMERS[id ?? '1'] ?? MOCK_CUSTOMERS['1'];
+  const [customer, setCustomer] = useState<CustomerData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCustomer = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+        if (!response.ok) {
+          throw new Error('Falha ao buscar dados do cliente');
+        }
+        const data = await response.json();
+        setCustomer(data);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message || 'Erro de conexão');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCustomer();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+          <Loader2 className="animate-spin text-[#6B4C9A]" size={48} />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error || !customer) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-red-500 font-sans">
+          <AlertTriangle size={48} className="mb-4" />
+          <h2 className="text-xl font-bold">Erro ao carregar o perfil do cliente</h2>
+          <p className="text-sm text-gray-500 mt-1">{error}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-6 px-5 py-2.5 bg-[#0E1B2B] hover:bg-[#1c3552] text-white rounded-xl font-bold text-xs transition-colors cursor-pointer"
+          >
+            Voltar ao Dashboard
+          </button>
+        </div>
+      </MainLayout>
+    );
+  }
 
   const getTimelineIcon = (type: 'alert' | 'eye' | 'check') => {
     switch (type) {

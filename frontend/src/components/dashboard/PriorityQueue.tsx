@@ -8,18 +8,18 @@ export interface QueueUser {
   company: string;
   reason: string;
   date: string;
-  scheme: 'red' | 'yellow' | 'green';
+  scheme: 'red' | 'yellow' | 'green' | string;
 }
 
 interface PriorityQueueProps {
-  users?: any[]; // Keep prop to avoid breaking App.tsx call, but we will override with pixel-perfect data matching the screenshot
+  users?: QueueUser[];
 }
 
-export const PriorityQueue: React.FC<PriorityQueueProps> = () => {
+export const PriorityQueue: React.FC<PriorityQueueProps> = ({ users }) => {
   const navigate = useNavigate();
 
-  // Precise mock data matching the screenshot
-  const queueData: QueueUser[] = [
+  // Precise mock data matching the screenshot as fallback
+  const fallbackQueueData: QueueUser[] = [
     {
       id: 2,
       name: 'Maria Silva',
@@ -54,7 +54,9 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = () => {
     }
   ];
 
-  const getSchemeStyles = (scheme: 'red' | 'yellow' | 'green') => {
+  const queueData = (users && users.length > 0) ? users : fallbackQueueData;
+
+  const getSchemeStyles = (scheme: string) => {
     switch (scheme) {
       case 'red':
         return {
@@ -62,17 +64,18 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = () => {
           iconBg: 'bg-red-50 text-red-500 ring-4 ring-red-500/10',
           icon: <AlertTriangle size={18} />
         };
-      case 'yellow':
-        return {
-          borderClass: 'border-l-yellow-500 shadow-[inset_4px_0_0_0_#eab308]',
-          iconBg: 'bg-yellow-50 text-yellow-600 ring-4 ring-yellow-500/10',
-          icon: <Eye size={18} />
-        };
       case 'green':
         return {
           borderClass: 'border-l-green-500 shadow-[inset_4px_0_0_0_#22c55e]',
           iconBg: 'bg-green-50 text-green-500 ring-4 ring-green-500/10',
           icon: <Leaf size={18} />
+        };
+      case 'yellow':
+      default:
+        return {
+          borderClass: 'border-l-yellow-500 shadow-[inset_4px_0_0_0_#eab308]',
+          iconBg: 'bg-yellow-50 text-yellow-600 ring-4 ring-yellow-500/10',
+          icon: <Eye size={18} />
         };
     }
   };

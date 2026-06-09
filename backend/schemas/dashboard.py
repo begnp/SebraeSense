@@ -15,6 +15,7 @@ class QueueUserResponse(BaseModel):
     reason: str
     alertCount: int
     date: str
+    scheme: str # "red" | "yellow" | "green"
 
 class HighlightUserResponse(BaseModel):
     id: int

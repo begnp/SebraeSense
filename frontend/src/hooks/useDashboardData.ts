@@ -15,6 +15,7 @@ export interface QueueUser {
   reason: string;
   alertCount: number;
   date: string;
+  scheme: 'red' | 'yellow' | 'green' | string;
 }
 
 export interface HighlightUser {

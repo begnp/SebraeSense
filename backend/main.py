@@ -4,7 +4,7 @@ from database import engine, Base, SessionLocal
 from routers import dashboard
 from models.customer import Customer
 from models.alert import Alert
-from routers import auth, dashboard, telemetry
+from routers import auth, dashboard, telemetry, customers
 from models.user import User
 
 # Create database tables
@@ -25,6 +25,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(dashboard.router)
 app.include_router(telemetry.router)
+app.include_router(customers.router)
 
 @app.on_event("startup")
 def seed_database():
