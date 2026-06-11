@@ -4,7 +4,7 @@ from database import get_db
 from models.customer import Customer
 from models.alert import Alert
 from models.telemetry import TelemetryEvent
-from schemas.customer import CustomerProfileResponse, CustomerScores, ScoreItem, TimelineEventResponse, ProcessItemResponse
+from schemas.customer import CustomerProfileResponse, CustomerScores, ScoreItem, TimelineEventResponse, ProcessItemResponse, AlertStatusUpdate
 from datetime import datetime
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
@@ -97,7 +97,9 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
         timeline_items.append((a.created_at, TimelineEventResponse(
             title=f"Alerta CRM: {a.reason}",
             time=time_str,
-            type="eye"
+            type="alert" if a.status == "active" else "eye",
+            alert_id=a.id,
+            status=a.status
         )))
 
     # Ordenar por data decrescente (mais recente primeiro)
@@ -130,3 +132,54 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
         timeline=final_timeline,
         processes=processes
     )
+
+
+@router.patch("/alerts/{alert_id}")
+def update_alert_status(alert_id: int, payload: AlertStatusUpdate, db: Session = Depends(get_db)):
+    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alerta não encontrado")
+        
+    old_status = alert.status
+    new_status = payload.status
+    
+    if new_status not in ["resolved", "false_positive"]:
+        raise HTTPException(status_code=400, detail="Status inválido")
+        
+    alert.status = new_status
+    
+    # Se for marcado como falso positivo, devolvemos os pontos ao CHS do cliente
+    if new_status == "false_positive" and old_status != "false_positive":
+        customer = db.query(Customer).filter(Customer.id == alert.customer_id).first()
+        if customer:
+            points_to_restore = 10
+            if "Rage Click" in alert.reason:
+                points_to_restore = 5
+            elif "Erro crítico" in alert.reason:
+                points_to_restore = 15
+            elif "TTV" in alert.reason or "Tempo de conclusão" in alert.reason:
+                points_to_restore = 10
+            
+            customer.current_chs = min(100, customer.current_chs + points_to_restore)
+            
+    db.commit()
+    return {"status": "success", "alert_id": alert.id, "new_status": alert.status}
+
+
+@router.get("/alerts/active")
+def get_all_active_alerts(db: Session = Depends(get_db)):
+    active_alerts = db.query(Alert).filter(Alert.status == "active").order_by(Alert.created_at.desc()).all()
+    
+    result = []
+    for a in active_alerts:
+        customer = db.query(Customer).filter(Customer.id == a.customer_id).first()
+        if customer:
+            result.append({
+                "id": a.id,
+                "customer_id": customer.id,
+                "customer_name": customer.name,
+                "company": customer.company,
+                "reason": a.reason,
+                "created_at": a.created_at.isoformat() if a.created_at else None
+            })
+    return result

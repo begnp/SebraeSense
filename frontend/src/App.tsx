@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect, type ReactNode } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { StatCard } from './components/dashboard/StatCard';
 import { PriorityQueue } from './components/dashboard/PriorityQueue';
 import { ChartWidget } from './components/dashboard/ChartWidget';
-import { AlertTriangle, Eye, Loader2, Info, ShieldCheck, Bell } from 'lucide-react';
+import { AlertTriangle, Eye, Loader2, Info, ShieldCheck, Bell, X } from 'lucide-react';
 import { useDashboardData } from './hooks/useDashboardData';
 import { CustomerProfile } from './pages/CustomerProfile';
 import { MiniSebraeHome } from './pages/sebrae/MiniSebraeHome';
@@ -15,8 +15,99 @@ import { Register } from "./pages/Register";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/settings";
 
+interface ActiveAlert {
+  id: number;
+  customer_id: number;
+  customer_name: string;
+  company: string;
+  reason: string;
+  created_at: string;
+}
+
+function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const navigate = useNavigate();
+  const [alerts, setAlerts] = useState<ActiveAlert[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchActiveAlerts = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('http://localhost:8000/api/customers/alerts/active');
+        if (res.ok) {
+          const data = await res.json();
+          setAlerts(data);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar alertas ativos:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchActiveAlerts();
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-[#0E1B2B]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-[24px] p-6 max-w-lg w-full shadow-2xl relative border border-gray-100/50 flex flex-col max-h-[70vh]">
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 text-gray-400 hover:text-[#0E1B2B] transition-colors cursor-pointer"
+        >
+          <X size={20} />
+        </button>
+        
+        <h3 className="text-xl font-extrabold text-[#0E1B2B] mb-4 flex items-center gap-2">
+          <Bell className="text-red-500" size={20} />
+          Alertas Ativos de Clientes
+        </h3>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="animate-spin text-[#6B4C9A]" size={36} />
+          </div>
+        ) : alerts.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 font-semibold text-sm">
+            Nenhum alerta ativo no momento.
+          </div>
+        ) : (
+          <div className="overflow-y-auto flex-1 flex flex-col gap-3.5 pr-1 py-1">
+            {alerts.map((alert) => (
+              <div 
+                key={alert.id} 
+                className="bg-[#F4F7FA] rounded-[16px] p-4 border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300"
+              >
+                <div className="flex flex-col gap-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-extrabold text-xs text-[#0E1B2B]">{alert.customer_name}</span>
+                    <span className="text-[10px] text-gray-400 font-bold bg-gray-200/50 px-2 py-0.5 rounded-full">{alert.company}</span>
+                  </div>
+                  <p className="text-[11px] text-gray-600 font-medium leading-relaxed pr-2">{alert.reason}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate(`/clientes/${alert.customer_id}`);
+                  }}
+                  className="whitespace-nowrap px-3.5 py-2 bg-[#0E1B2B] hover:bg-[#152a42] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                >
+                  Acessar Perfil →
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { data, loading, error } = useDashboardData();
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
 
   if (loading) {
     return (
@@ -121,7 +212,10 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <button className="w-full py-2.5 mt-2 bg-[#0E1B2B] hover:bg-[#152a42] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer text-center">
+                <button 
+                  onClick={() => setIsAlertsOpen(true)}
+                  className="w-full py-2.5 mt-2 bg-[#0E1B2B] hover:bg-[#152a42] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer text-center"
+                >
                   Ver alertas →
                 </button>
               </div>
@@ -143,6 +237,7 @@ function Dashboard() {
         </div>
 
       </div>
+      <ActiveAlertsModal isOpen={isAlertsOpen} onClose={() => setIsAlertsOpen(false)} />
     </MainLayout>
   );
 }

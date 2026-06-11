@@ -71,5 +71,40 @@ def create_telemetry_event(payload: TelemetryCreate, db: Session = Depends(get_d
             )
             db.add(alert)
 
+    elif payload.event_type == "task_completed":
+        time_spent = payload.metadata_payload.get("timeSpent", 0) if payload.metadata_payload else 0
+        page = payload.metadata_payload.get("page", "Tarefa") if payload.metadata_payload else "Tarefa"
+        
+        # Query past task_completed events to compute average
+        past_events = db.query(TelemetryEvent).filter(
+            TelemetryEvent.customer_id == customer.id,
+            TelemetryEvent.event_type == "task_completed"
+        ).all()
+        
+        past_times = []
+        for pe in past_events:
+            if pe.id is not None and pe.metadata_payload and pe.metadata_payload.get("page") == page:
+                pe_time = pe.metadata_payload.get("timeSpent")
+                if pe_time is not None:
+                    past_times.append(pe_time)
+        
+        if len(past_times) > 0:
+            avg_time = sum(past_times) / len(past_times)
+            if time_spent > 1.4 * avg_time:
+                reason = f"Desengajamento: Tempo de conclusão (TTV) na tarefa '{page}' foi de {time_spent:.1f}s, superior a 40% da média histórica ({avg_time:.1f}s)"
+                existing_alert = db.query(Alert).filter(
+                    Alert.customer_id == customer.id,
+                    Alert.reason == reason,
+                    Alert.status == "active"
+                ).first()
+                if not existing_alert:
+                    alert = Alert(
+                        customer_id=customer.id,
+                        reason=reason,
+                        status="active"
+                    )
+                    db.add(alert)
+                    customer.current_chs = max(0, customer.current_chs - 10)
+
     db.commit()
     return {"status": "success", "customer_id": customer.id, "current_chs": customer.current_chs}

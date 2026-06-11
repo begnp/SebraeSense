@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 interface ScoreItem { value: number; max: number; color: 'yellow' | 'red' | 'green'; }
-interface TimelineEvent { title: string; time: string; type: 'alert' | 'eye' | 'check'; }
+interface TimelineEvent { title: string; time: string; type: 'alert' | 'eye' | 'check'; alert_id?: number; status?: string; }
 interface ProcessItem { id: string; title: string; period: string; dots: ('green' | 'yellow' | 'gray')[]; }
 
 interface CustomerData {
@@ -181,6 +181,28 @@ export function CustomerProfile() {
     fetchCustomer();
   }, [id]);
 
+  const handleResolveAlert = async (alertId: number, status: 'resolved' | 'false_positive') => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/customers/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status })
+      });
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar o alerta');
+      }
+      const profileRes = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+      if (profileRes.ok) {
+        const updatedCustomer = await profileRes.json();
+        setCustomer(updatedCustomer);
+      }
+    } catch (err: any) {
+      console.error('Erro ao atualizar alerta:', err);
+    }
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -308,13 +330,41 @@ export function CustomerProfile() {
                     
                     {/* Event Bubble */}
                     <div className="bg-[#E5EFEA] rounded-[16px] p-4 flex-1 flex items-center justify-between gap-4 border border-gray-100/20">
-                      <div className="flex flex-col min-w-0">
+                      <div className="flex flex-col min-w-0 flex-1">
                         <span className="text-xs font-bold text-[#0E1B2B] leading-tight break-words">
                           {event.title}
                         </span>
                         <span className="text-[10px] font-semibold text-gray-400 mt-1">
                           {event.time}
                         </span>
+                        {event.alert_id && (
+                          <div className="mt-2.5 flex flex-wrap gap-2">
+                            {event.status === 'active' ? (
+                              <>
+                                <button
+                                  onClick={() => handleResolveAlert(event.alert_id!, 'resolved')}
+                                  className="px-2.5 py-1 bg-[#3CDAB6] hover:bg-[#2cb898] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                >
+                                  ✓ Resolvido
+                                </button>
+                                <button
+                                  onClick={() => handleResolveAlert(event.alert_id!, 'false_positive')}
+                                  className="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                >
+                                  ✗ Falso Positivo
+                                </button>
+                              </>
+                            ) : event.status === 'resolved' ? (
+                              <span className="px-2.5 py-0.5 bg-[#E5EFEA] text-[#0E1B2B] text-[10px] font-extrabold rounded-full border border-green-200 uppercase tracking-wider">
+                                ✓ Resolvido
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-extrabold rounded-full border border-gray-200 uppercase tracking-wider">
+                                ✗ Falso Positivo
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       {getTimelineIcon(event.type)}
                     </div>

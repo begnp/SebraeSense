@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class ScoreItem(BaseModel):
     value: int
@@ -16,6 +16,11 @@ class TimelineEventResponse(BaseModel):
     title: str
     time: str
     type: str # alert, eye, check
+    alert_id: Optional[int] = None
+    status: Optional[str] = None
+
+class AlertStatusUpdate(BaseModel):
+    status: str
 
 class ProcessItemResponse(BaseModel):
     id: str
