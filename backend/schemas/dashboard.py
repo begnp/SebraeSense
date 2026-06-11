@@ -33,8 +33,17 @@ class ChartDataPoint(BaseModel):
     name: str
     chs: int
 
+class AlertSummaryResponse(BaseModel):
+    inatividade: int
+    erro_critico: int
+    suporte: int
+    desengajamento: int
+    eventos: int
+    cursos: int
+
 class DashboardResponse(BaseModel):
     stats: StatCardResponse
     queue: List[QueueUserResponse]
     highlights: List[HighlightUserResponse]
     chart: List[ChartDataPoint]
+    alerts_summary: AlertSummaryResponse

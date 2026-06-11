@@ -106,7 +106,8 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 }
 
 function Dashboard() {
-  const { data, loading, error } = useDashboardData();
+  const [days, setDays] = useState(30);
+  const { data, loading, error } = useDashboardData(days);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
 
   if (loading) {
@@ -135,6 +136,31 @@ function Dashboard() {
     <MainLayout>
       <div className="flex flex-col gap-6 font-sans">
         
+        {/* Dashboard Header with Date Filter */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white rounded-[24px] p-6 border border-gray-100/50 shadow-[0_4px_24px_rgba(52,180,166,0.02)]">
+          <div>
+            <h2 className="text-xl font-extrabold text-[#0E1B2B]">Painel de Controle</h2>
+            <p className="text-xs text-gray-400 font-semibold mt-0.5">Acompanhamento de saúde e telemetria dos clientes</p>
+          </div>
+          
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/50 flex-shrink-0">
+            {[7, 15, 30].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDays(d)}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  days === d 
+                    ? 'bg-[#0E1B2B] text-white shadow-sm' 
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                {d} dias
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Top KPIs Row (4 Cards) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
@@ -187,28 +213,38 @@ function Dashboard() {
               {/* Right Side: Grey Box with list of alerts */}
               <div className="bg-[#E5EFEA] rounded-[20px] p-6 w-full sm:w-80 flex flex-col gap-4">
                 <span className="text-sm font-extrabold text-[#0E1B2B]">
-                  Últimos 30 dias
+                  Últimos {days} dias
                 </span>
                 
                 <div className="flex flex-col gap-2.5">
                   <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
                     <span>Inatividade prolongada</span>
-                    <span className="text-[#0E1B2B] font-bold">14</span>
+                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.inatividade}</span>
                   </div>
                   <hr className="border-gray-200/50" />
                   <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
                     <span>Erro em tarefa crítica</span>
-                    <span className="text-[#0E1B2B] font-bold">11</span>
+                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.erro_critico}</span>
                   </div>
                   <hr className="border-gray-200/50" />
                   <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
                     <span>Suporte sem resolução</span>
-                    <span className="text-[#0E1B2B] font-bold">9</span>
+                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.suporte}</span>
                   </div>
                   <hr className="border-gray-200/50" />
                   <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
                     <span>Queda de engajamento</span>
-                    <span className="text-[#0E1B2B] font-bold">8</span>
+                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.desengajamento}</span>
+                  </div>
+                  <hr className="border-gray-200/50" />
+                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
+                    <span>Eventos</span>
+                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.eventos}</span>
+                  </div>
+                  <hr className="border-gray-200/50" />
+                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
+                    <span>Cursos</span>
+                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.cursos}</span>
                   </div>
                 </div>
 
