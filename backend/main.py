@@ -57,14 +57,17 @@ def seed_database():
             Alert(customer_id=c1.id, reason="3 erros consecutivos no cadastro"),
             Alert(customer_id=c1.id, reason="Abandono do fluxo principal"),
             Alert(customer_id=c1.id, reason="Queda brusca de engajamento"),
+            Alert(customer_id=c1.id, reason="Reclamação sobre o Curso de Gestão Financeira"),
             
             Alert(customer_id=c2.id, reason="Inatividade de 30 dias + tarefa abandonada"),
             Alert(customer_id=c2.id, reason="Baixo índice de sucesso"),
             Alert(customer_id=c2.id, reason="Reporte de erro não resolvido"),
+            Alert(customer_id=c2.id, reason="Dificuldade no credenciamento do Evento Sebrae"),
             
             Alert(customer_id=c3.id, reason="Abandono em tarefa crítica"),
             Alert(customer_id=c3.id, reason="Fricção de navegação detectada"),
             Alert(customer_id=c3.id, reason="Login expirado diversas vezes"),
+            Alert(customer_id=c3.id, reason="Suporte técnico sem resposta há 48h"),
         ])
         db.commit()
         print("Banco de dados semeado com sucesso!")

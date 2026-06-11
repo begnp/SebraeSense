@@ -21,6 +21,7 @@ interface ActiveAlert {
   customer_name: string;
   company: string;
   reason: string;
+  category?: string;
   created_at: string;
 }
 
@@ -28,6 +29,17 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<ActiveAlert[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
+
+  const categories = [
+    'Todos',
+    'Inatividade prolongada',
+    'Erro em tarefa crítica',
+    'Suporte sem resolução',
+    'Queda de engajamento',
+    'Eventos',
+    'Cursos'
+  ];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -48,7 +60,26 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     fetchActiveAlerts();
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedCategory('Todos');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const categoryCounts = categories.reduce((acc, cat) => {
+    if (cat === 'Todos') {
+      acc[cat] = alerts.length;
+    } else {
+      acc[cat] = alerts.filter(a => a.category === cat).length;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  const filteredAlerts = selectedCategory === 'Todos'
+    ? alerts
+    : alerts.filter(a => a.category === selectedCategory);
 
   return (
     <div className="fixed inset-0 bg-[#0E1B2B]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -65,17 +96,47 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           Alertas Ativos de Clientes
         </h3>
 
+        {/* Category Filter Pills */}
+        <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1.5 flex-shrink-0">
+          {categories.map((cat) => {
+            const count = categoryCounts[cat] || 0;
+            const isActive = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold whitespace-nowrap transition-all cursor-pointer border ${
+                  isActive
+                    ? 'bg-[#0E1B2B] text-white border-[#0E1B2B] shadow-sm'
+                    : 'bg-[#F4F7FA] text-gray-400 border-gray-200/50 hover:bg-gray-100 hover:text-gray-600'
+                }`}
+              >
+                {cat} 
+                <span className={`ml-1.5 px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                  isActive 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-gray-200/60 text-gray-500'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-12 flex-1">
             <Loader2 className="animate-spin text-[#6B4C9A]" size={36} />
           </div>
-        ) : alerts.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 font-semibold text-sm">
-            Nenhum alerta ativo no momento.
+        ) : filteredAlerts.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 font-semibold text-xs bg-gray-50 rounded-[18px] border border-gray-100/50 flex-1 flex flex-col items-center justify-center">
+            <Info className="text-gray-300 mb-2" size={24} />
+            Nenhum alerta ativo nesta categoria.
           </div>
         ) : (
           <div className="overflow-y-auto flex-1 flex flex-col gap-3.5 pr-1 py-1">
-            {alerts.map((alert) => (
+            {filteredAlerts.map((alert) => (
               <div 
                 key={alert.id} 
                 className="bg-[#F4F7FA] rounded-[16px] p-4 border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300"
@@ -84,6 +145,9 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-extrabold text-xs text-[#0E1B2B]">{alert.customer_name}</span>
                     <span className="text-[10px] text-gray-400 font-bold bg-gray-200/50 px-2 py-0.5 rounded-full">{alert.company}</span>
+                    <span className="text-[9px] font-extrabold uppercase bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded border border-gray-300/30">
+                      {alert.category || 'Queda de engajamento'}
+                    </span>
                   </div>
                   <p className="text-[11px] text-gray-600 font-medium leading-relaxed pr-2">{alert.reason}</p>
                 </div>

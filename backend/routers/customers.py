@@ -200,6 +200,24 @@ def update_alert_status(alert_id: int, payload: AlertStatusUpdate, db: Session =
     return {"status": "success", "alert_id": alert.id, "new_status": alert.status}
 
 
+def categorize_alert(reason: str) -> str:
+    r = reason.lower()
+    if "inatividade" in r or "abandono do fluxo" in r:
+        return "Inatividade prolongada"
+    elif "erro" in r or "rage click" in r or "fricção" in r:
+        return "Erro em tarefa crítica"
+    elif "suporte" in r:
+        return "Suporte sem resolução"
+    elif "desengajamento" in r or "ttv" in r or "tempo de conclusão" in r or "queda" in r or "sucesso" in r:
+        return "Queda de engajamento"
+    elif "evento" in r:
+        return "Eventos"
+    elif "curso" in r:
+        return "Cursos"
+    else:
+        return "Queda de engajamento"
+
+
 @router.get("/alerts/active")
 def get_all_active_alerts(db: Session = Depends(get_db)):
     active_alerts = db.query(Alert).filter(Alert.status == "active").order_by(Alert.created_at.desc()).all()
@@ -214,6 +232,7 @@ def get_all_active_alerts(db: Session = Depends(get_db)):
                 "customer_name": customer.name,
                 "company": customer.company,
                 "reason": a.reason,
+                "category": categorize_alert(a.reason),
                 "created_at": a.created_at.isoformat() if a.created_at else None
             })
     return result
