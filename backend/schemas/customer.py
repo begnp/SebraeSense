@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from schemas.feedback import FeedbackResponse
 
 class ScoreItem(BaseModel):
     value: int
@@ -39,3 +40,4 @@ class CustomerProfileResponse(BaseModel):
     scores: CustomerScores
     timeline: List[TimelineEventResponse]
     processes: List[ProcessItemResponse]
+    feedbacks: List[FeedbackResponse]

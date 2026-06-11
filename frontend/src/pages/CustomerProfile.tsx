@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import {
-  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2, Loader2
+  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2, Loader2, Star
 } from 'lucide-react';
 
 interface ScoreItem { value: number; max: number; color: 'yellow' | 'red' | 'green'; }
 interface TimelineEvent { title: string; time: string; type: 'alert' | 'eye' | 'check'; alert_id?: number; status?: string; }
 interface ProcessItem { id: string; title: string; period: string; dots: ('green' | 'yellow' | 'gray')[]; }
+interface FeedbackItem { id: number; comment: string; rating?: number; sentiment: 'positive' | 'neutral' | 'negative' | string; created_at: string; }
 
 interface CustomerData {
   id: number;
@@ -25,6 +26,7 @@ interface CustomerData {
   };
   timeline: TimelineEvent[];
   processes: ProcessItem[];
+  feedbacks: FeedbackItem[];
 }
 
 
@@ -314,110 +316,163 @@ export function CustomerProfile() {
 
         {/* Detailed Grid (Left Col-span 8, Right Col-span 4) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* Left Column components (Timeline & Processes) */}
-          <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Linha do tempo Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col h-full">
-              <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Linha do tempo</h3>
+                   {/* Left Column components (Timeline, Processes & Feedbacks) */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              <div className="flex-1 flex flex-col gap-5 relative pl-6 border-l-2 border-dashed border-[#3CDAB6]/40 ml-2 py-1">
-                {customer.timeline.map((event, idx) => (
-                  <div key={idx} className="relative flex items-center">
-                    {/* Circle bullet on the dashed line */}
-                    <div className="absolute -left-[31px] w-4 h-4 rounded-full bg-[#3CDAB6] border-2 border-white ring-2 ring-[#3CDAB6]/20 flex-shrink-0" />
-                    
-                    {/* Event Bubble */}
-                    <div className="bg-[#E5EFEA] rounded-[16px] p-4 flex-1 flex items-center justify-between gap-4 border border-gray-100/20">
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-xs font-bold text-[#0E1B2B] leading-tight break-words">
-                          {event.title}
-                        </span>
-                        <span className="text-[10px] font-semibold text-gray-400 mt-1">
-                          {event.time}
-                        </span>
-                        {event.alert_id && (
-                          <div className="mt-2.5 flex flex-wrap gap-2">
-                            {event.status === 'active' ? (
-                              <>
-                                <button
-                                  onClick={() => handleResolveAlert(event.alert_id!, 'resolved')}
-                                  className="px-2.5 py-1 bg-[#3CDAB6] hover:bg-[#2cb898] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
-                                >
+              {/* Linha do tempo Card */}
+              <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col h-full">
+                <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Linha do tempo</h3>
+                
+                <div className="flex-1 flex flex-col gap-5 relative pl-6 border-l-2 border-dashed border-[#3CDAB6]/40 ml-2 py-1">
+                  {customer.timeline.map((event, idx) => (
+                    <div key={idx} className="relative flex items-center">
+                      {/* Circle bullet on the dashed line */}
+                      <div className="absolute -left-[31px] w-4 h-4 rounded-full bg-[#3CDAB6] border-2 border-white ring-2 ring-[#3CDAB6]/20 flex-shrink-0" />
+                      
+                      {/* Event Bubble */}
+                      <div className="bg-[#E5EFEA] rounded-[16px] p-4 flex-1 flex items-center justify-between gap-4 border border-gray-100/20">
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-xs font-bold text-[#0E1B2B] leading-tight break-words">
+                            {event.title}
+                          </span>
+                          <span className="text-[10px] font-semibold text-gray-400 mt-1">
+                            {event.time}
+                          </span>
+                          {event.alert_id && (
+                            <div className="mt-2.5 flex flex-wrap gap-2">
+                              {event.status === 'active' ? (
+                                <>
+                                  <button
+                                    onClick={() => handleResolveAlert(event.alert_id!, 'resolved')}
+                                    className="px-2.5 py-1 bg-[#3CDAB6] hover:bg-[#2cb898] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    ✓ Resolvido
+                                  </button>
+                                  <button
+                                    onClick={() => handleResolveAlert(event.alert_id!, 'false_positive')}
+                                    className="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    ✗ Falso Positivo
+                                  </button>
+                                </>
+                              ) : event.status === 'resolved' ? (
+                                <span className="px-2.5 py-0.5 bg-[#E5EFEA] text-[#0E1B2B] text-[10px] font-extrabold rounded-full border border-green-200 uppercase tracking-wider">
                                   ✓ Resolvido
-                                </button>
-                                <button
-                                  onClick={() => handleResolveAlert(event.alert_id!, 'false_positive')}
-                                  className="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
-                                >
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-extrabold rounded-full border border-gray-200 uppercase tracking-wider">
                                   ✗ Falso Positivo
-                                </button>
-                              </>
-                            ) : event.status === 'resolved' ? (
-                              <span className="px-2.5 py-0.5 bg-[#E5EFEA] text-[#0E1B2B] text-[10px] font-extrabold rounded-full border border-green-200 uppercase tracking-wider">
-                                ✓ Resolvido
-                              </span>
-                            ) : (
-                              <span className="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-extrabold rounded-full border border-gray-200 uppercase tracking-wider">
-                                ✗ Falso Positivo
-                              </span>
-                            )}
-                          </div>
-                        )}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {getTimelineIcon(event.type)}
                       </div>
-                      {getTimelineIcon(event.type)}
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                <button className="mt-6 py-2.5 w-full border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center">
+                  Ver mais +
+                </button>
               </div>
 
-              <button className="mt-6 py-2.5 w-full border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center">
-                Ver mais +
-              </button>
+              {/* Processos abertos Card */}
+              <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col h-full">
+                <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Processos abertos</h3>
+                
+                <div className="flex flex-col gap-5 flex-1">
+                  {customer.processes.map((proc, idx) => (
+                    <div key={idx} className="border border-gray-100 rounded-[20px] overflow-hidden flex flex-col shadow-sm bg-white">
+                      {/* Top Tag Bar */}
+                      <div className="bg-[#3CDAB6] px-4 py-1.5 flex justify-between items-center text-[10px] font-bold text-white">
+                        <span>{proc.period}</span>
+                        <span>{proc.id}</span>
+                      </div>
+                      {/* Card Body */}
+                      <div className="p-4 flex flex-col gap-4">
+                        <div className="flex justify-between items-start gap-4">
+                          <span className="text-xs font-extrabold text-[#0E1B2B] leading-tight pr-2">
+                            {proc.title}
+                          </span>
+                          
+                          {/* Dot Status Indicators */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {proc.dots.map((dot, dIdx) => (
+                              <div 
+                                key={dIdx} 
+                                className={`w-2.5 h-2.5 rounded-full ${getDotColorClass(dot)}`} 
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <button className="w-full py-2 bg-[#E5EFEA] hover:bg-[#d8e7e1] text-[#0E1B2B] text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                          Atualizar caso <span className="text-sm">↗</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="mt-6 py-2.5 w-full border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center">
+                  Ver mais +
+                </button>
+              </div>
+
             </div>
 
-            {/* Processos abertos Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col h-full">
-              <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Processos abertos</h3>
+            {/* Feedbacks do Cliente Card */}
+            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col">
+              <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Feedbacks do Cliente</h3>
               
-              <div className="flex flex-col gap-5 flex-1">
-                {customer.processes.map((proc, idx) => (
-                  <div key={idx} className="border border-gray-100 rounded-[20px] overflow-hidden flex flex-col shadow-sm bg-white">
-                    {/* Top Tag Bar */}
-                    <div className="bg-[#3CDAB6] px-4 py-1.5 flex justify-between items-center text-[10px] font-bold text-white">
-                      <span>{proc.period}</span>
-                      <span>{proc.id}</span>
-                    </div>
-                    {/* Card Body */}
-                    <div className="p-4 flex flex-col gap-4">
-                      <div className="flex justify-between items-start gap-4">
-                        <span className="text-xs font-extrabold text-[#0E1B2B] leading-tight pr-2">
-                          {proc.title}
-                        </span>
-                        
-                        {/* Dot Status Indicators */}
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {proc.dots.map((dot, dIdx) => (
-                            <div 
-                              key={dIdx} 
-                              className={`w-2.5 h-2.5 rounded-full ${getDotColorClass(dot)}`} 
+              {customer.feedbacks.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 font-semibold text-xs bg-gray-50 rounded-2xl border border-gray-100">
+                  Nenhum feedback registrado para este cliente.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4 max-h-[350px] overflow-y-auto pr-1">
+                  {customer.feedbacks.map((fb) => (
+                    <div key={fb.id} className="bg-[#F4F7FA] rounded-[20px] p-4 border border-gray-100/50 flex flex-col gap-2 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="flex justify-between items-center flex-wrap gap-2">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={12}
+                              className={
+                                s <= (fb.rating || 0)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }
                             />
                           ))}
                         </div>
+                        
+                        <span className={`px-2.5 py-0.5 text-[8px] font-extrabold rounded-full uppercase tracking-wider border ${
+                          fb.sentiment === 'positive'
+                            ? 'bg-green-50 text-green-600 border-green-200'
+                            : fb.sentiment === 'negative'
+                            ? 'bg-red-50 text-red-500 border-red-200'
+                            : 'bg-gray-100 text-gray-500 border-gray-200'
+                        }`}>
+                          {fb.sentiment === 'positive'
+                            ? 'POSITIVO'
+                            : fb.sentiment === 'negative'
+                            ? 'NEGATIVO'
+                            : 'NEUTRO'}
+                        </span>
                       </div>
-
-                      <button className="w-full py-2 bg-[#E5EFEA] hover:bg-[#d8e7e1] text-[#0E1B2B] text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-                        Atualizar caso <span className="text-sm">↗</span>
-                      </button>
+                      <p className="text-xs text-gray-700 leading-relaxed font-semibold">{fb.comment}</p>
+                      <span className="text-[10px] text-gray-400 font-semibold mt-1">
+                        Registrado em {new Date(fb.created_at).toLocaleDateString('pt-BR')}
+                      </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              <button className="mt-6 py-2.5 w-full border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center">
-                Ver mais +
-              </button>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>

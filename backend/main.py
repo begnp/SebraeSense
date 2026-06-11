@@ -4,6 +4,7 @@ from database import engine, Base, SessionLocal
 from routers import dashboard
 from models.customer import Customer
 from models.alert import Alert
+from models.feedback import Feedback
 from routers import auth, dashboard, telemetry, customers
 from models.user import User
 

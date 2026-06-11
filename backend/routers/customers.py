@@ -4,7 +4,9 @@ from database import get_db
 from models.customer import Customer
 from models.alert import Alert
 from models.telemetry import TelemetryEvent
+from models.feedback import Feedback
 from schemas.customer import CustomerProfileResponse, CustomerScores, ScoreItem, TimelineEventResponse, ProcessItemResponse, AlertStatusUpdate
+from schemas.feedback import FeedbackCreate, FeedbackResponse
 from datetime import datetime
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
@@ -120,6 +122,8 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
         ProcessItemResponse(id="#1037", title="Erro na emissão de nota fiscal", period="Esta semana", dots=["yellow", "yellow", "gray"])
     ]
 
+    feedbacks = db.query(Feedback).filter(Feedback.customer_id == customer.id).order_by(Feedback.created_at.desc()).all()
+
     return CustomerProfileResponse(
         id=customer.id,
         name=customer.name,
@@ -130,7 +134,8 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
         score=customer.current_chs,
         scores=scores,
         timeline=final_timeline,
-        processes=processes
+        processes=processes,
+        feedbacks=feedbacks
     )
 
 
@@ -183,3 +188,57 @@ def get_all_active_alerts(db: Session = Depends(get_db)):
                 "created_at": a.created_at.isoformat() if a.created_at else None
             })
     return result
+
+
+@router.post("/{customer_id}/feedback", response_model=FeedbackResponse)
+def create_feedback(customer_id: int, payload: FeedbackCreate, db: Session = Depends(get_db)):
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+        
+    comment = payload.comment
+    rating = payload.rating
+    
+    # Portugues sentiment analysis keywords
+    comment_lower = comment.lower()
+    positive_keywords = ["bom", "excelente", "ótimo", "maravilhoso", "gostei", "ajudou", "perfeito", "sucesso", "rápido", "legal", "fácil", "facil", "recomendo", "muito bom", "otimo"]
+    negative_keywords = ["ruim", "péssimo", "lento", "erro", "difícil", "dificil", "não funciona", "travou", "bug", "falha", "horrível", "demora", "chato", "pessimo", "ruins", "odiei"]
+    
+    pos_count = sum(1 for w in positive_keywords if w in comment_lower)
+    neg_count = sum(1 for w in negative_keywords if w in comment_lower)
+    
+    if neg_count > pos_count:
+        sentiment = "negative"
+    elif pos_count > neg_count:
+        sentiment = "positive"
+    else:
+        sentiment = "neutral"
+        
+    fb = Feedback(
+        customer_id=customer_id,
+        comment=comment,
+        rating=rating,
+        sentiment=sentiment
+    )
+    db.add(fb)
+    
+    # If negative feedback, trigger active alert and subtract 15 points
+    if sentiment == "negative":
+        customer.current_chs = max(0, customer.current_chs - 15)
+        reason = f"Feedback Negativo: \"{comment[:40]}...\""
+        existing_alert = db.query(Alert).filter(
+            Alert.customer_id == customer.id,
+            Alert.reason == reason,
+            Alert.status == "active"
+        ).first()
+        if not existing_alert:
+            alert = Alert(
+                customer_id=customer.id,
+                reason=reason,
+                status="active"
+            )
+            db.add(alert)
+            
+    db.commit()
+    db.refresh(fb)
+    return fb

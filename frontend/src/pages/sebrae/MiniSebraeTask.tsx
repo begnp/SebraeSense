@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTracker } from '../../hooks/useTracker';
-import { CheckCircle2, AlertCircle, FileText, ChevronLeft, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, FileText, ChevronLeft, Loader2, Star } from 'lucide-react';
 
 export function MiniSebraeTask() {
   const { completeTask, logError } = useTracker({ pageName: 'Mini Sebrae - Abertura de Empresa' });
@@ -11,6 +11,33 @@ export function MiniSebraeTask() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Feedback states
+  const [rating, setRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [comment, setComment] = useState<string>('');
+  const [feedbackSent, setFeedbackSent] = useState<boolean>(false);
+  const [sendingFeedback, setSendingFeedback] = useState<boolean>(false);
+
+  const handleSendFeedback = async () => {
+    setSendingFeedback(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/customers/1/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ comment, rating })
+      });
+      if (response.ok) {
+        setFeedbackSent(true);
+      }
+    } catch (err) {
+      console.error('Erro ao enviar feedback:', err);
+    } finally {
+      setSendingFeedback(false);
+    }
+  };
 
   // Form states
   const [cpf, setCpf] = useState('');
@@ -92,14 +119,81 @@ export function MiniSebraeTask() {
 
           <div className="p-8 sm:p-10">
             {success ? (
-              <div className="text-center py-8 animate-in fade-in zoom-in duration-500">
-                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 size={40} />
+              <div className="text-center py-4 animate-in fade-in zoom-in duration-500">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={32} />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Empresa aberta com sucesso!</h2>
-                <p className="text-gray-600 text-lg mb-8">
-                  Parabéns! Seu processo foi concluído. (TTV registrado no console).
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Empresa aberta com sucesso!</h2>
+                <p className="text-gray-500 text-sm mb-6">
+                  Parabéns! Seu processo de formalização foi concluído no Portal.
                 </p>
+
+                {!feedbackSent ? (
+                  <div className="bg-[#F4F7FA] border border-gray-200/50 rounded-xl p-5 text-left mb-6 flex flex-col gap-4 animate-in slide-in-from-bottom-2 duration-300">
+                    <div>
+                      <h4 className="font-extrabold text-[#0E1B2B] text-xs uppercase tracking-wider mb-2">
+                        Como foi sua experiência? (Avaliação Rápida)
+                      </h4>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Sua opinião ajuda o Sebrae a aprimorar seus canais de atendimento digital.
+                      </p>
+                      
+                      <div className="flex items-center gap-1.5 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            className="p-1 cursor-pointer transition-transform hover:scale-110 active:scale-95 focus:outline-none"
+                          >
+                            <Star
+                              size={24}
+                              className={
+                                star <= (hoverRating || rating)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 mb-1.5">Comentário ou Crítica</label>
+                      <textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Conte-nos o que funcionou ou o que deu errado..."
+                        rows={3}
+                        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#005AA5] focus:border-[#005AA5] outline-none transition-all resize-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 mt-1">
+                      <button
+                        onClick={handleSendFeedback}
+                        disabled={sendingFeedback || rating === 0}
+                        className="flex-1 bg-[#00A859] hover:bg-[#008F4C] disabled:bg-gray-300 text-white py-2.5 rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        {sendingFeedback ? <Loader2 className="animate-spin" size={16} /> : 'Enviar Avaliação'}
+                      </button>
+                      <button
+                        onClick={() => setFeedbackSent(true)}
+                        className="text-xs text-gray-400 hover:text-gray-600 font-bold px-2 py-2"
+                      >
+                        Pular
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-green-50 border border-green-200/50 rounded-xl p-5 text-center mb-6 animate-in zoom-in duration-300">
+                    <p className="text-green-800 text-sm font-bold">Obrigado! Sua opinião foi registrada com sucesso.</p>
+                    <p className="text-green-600 text-xs mt-1">O time de Customer Experience (CX) irá analisar o seu relato.</p>
+                  </div>
+                )}
+
                 <button 
                   onClick={() => navigate('/')}
                   className="bg-[#005AA5] hover:bg-[#004785] text-white px-8 py-3 rounded-lg font-semibold transition-all shadow-md w-full"
