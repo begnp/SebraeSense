@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import {
-  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2, Loader2, Star
+  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2, Loader2, Star, X
 } from 'lucide-react';
 
 interface ScoreItem { value: number; max: number; color: 'yellow' | 'red' | 'green'; }
 interface TimelineEvent { title: string; time: string; type: 'alert' | 'eye' | 'check'; alert_id?: number; status?: string; }
-interface ProcessItem { id: string; title: string; period: string; dots: ('green' | 'yellow' | 'gray')[]; }
+interface ProcessItem { id: string; title: string; period: string; dots: ('green' | 'yellow' | 'gray')[]; status: string; notes?: string; }
 interface FeedbackItem { id: number; comment: string; rating?: number; sentiment: 'positive' | 'neutral' | 'negative' | string; created_at: string; }
 
 interface CustomerData {
@@ -162,6 +162,46 @@ export function CustomerProfile() {
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedProcess, setSelectedProcess] = useState<ProcessItem | null>(null);
+  const [newStatus, setNewStatus] = useState<string>('aberto');
+  const [newNotes, setNewNotes] = useState<string>('');
+  const [updating, setUpdating] = useState(false);
+
+  const handleUpdateProcess = async () => {
+    if (!selectedProcess) return;
+    setUpdating(true);
+    try {
+      const cleanId = selectedProcess.id.replace('#', '');
+      const response = await fetch(`http://localhost:8000/api/customers/processes/${cleanId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          notes: newNotes,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar o processo');
+      }
+
+      const profileRes = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+      if (profileRes.ok) {
+        const updatedCustomer = await profileRes.json();
+        setCustomer(updatedCustomer);
+      }
+      setIsUpdateModalOpen(false);
+    } catch (err: any) {
+      console.error('Erro ao atualizar processo:', err);
+      alert('Erro ao atualizar o processo: ' + err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -409,7 +449,15 @@ export function CustomerProfile() {
                           </div>
                         </div>
 
-                        <button className="w-full py-2 bg-[#E5EFEA] hover:bg-[#d8e7e1] text-[#0E1B2B] text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                        <button 
+                          onClick={() => {
+                            setSelectedProcess(proc);
+                            setNewStatus(proc.status);
+                            setNewNotes(proc.notes || '');
+                            setIsUpdateModalOpen(true);
+                          }}
+                          className="w-full py-2 bg-[#E5EFEA] hover:bg-[#d8e7e1] text-[#0E1B2B] text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
                           Atualizar caso <span className="text-sm">↗</span>
                         </button>
                       </div>
@@ -528,6 +576,114 @@ export function CustomerProfile() {
         </div>
 
       </div>
+
+      {/* Update Process Modal */}
+      {isUpdateModalOpen && selectedProcess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white/95 backdrop-blur-md rounded-[32px] border border-gray-100/80 p-6 shadow-[0_10px_50px_rgba(0,0,0,0.15)] max-w-md w-full mx-auto animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Gestão de Ocorrências
+                </span>
+                <h3 className="text-xl font-extrabold text-[#0E1B2B] mt-0.5">
+                  Atualizar Caso {selectedProcess.id}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setIsUpdateModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Case Details */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">Assunto</span>
+              <p className="text-xs font-bold text-[#0E1B2B] mt-0.5">{selectedProcess.title}</p>
+            </div>
+
+            {/* Status Selector */}
+            <div className="mb-6">
+              <label className="text-xs font-bold text-[#0E1B2B] block mb-2.5">
+                Alterar Status do Atendimento
+              </label>
+              <div className="grid grid-cols-3 gap-2.5">
+                {(['aberto', 'em_andamento', 'finalizado'] as const).map((statusVal) => {
+                  const labelMap = {
+                    aberto: 'Aberto',
+                    em_andamento: 'Em Andamento',
+                    finalizado: 'Finalizado'
+                  };
+                  const activeColorMap = {
+                    aberto: 'bg-[#E5EFEA] text-[#1e4a38] border-green-300 shadow-sm shadow-green-100',
+                    em_andamento: 'bg-yellow-50 text-yellow-800 border-yellow-300 shadow-sm shadow-yellow-100',
+                    finalizado: 'bg-blue-50 text-blue-800 border-blue-300 shadow-sm shadow-blue-100'
+                  };
+                  const isActive = newStatus === statusVal;
+                  return (
+                    <button
+                      key={statusVal}
+                      type="button"
+                      onClick={() => setNewStatus(statusVal)}
+                      className={`py-3 px-1 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                        isActive 
+                          ? activeColorMap[statusVal]
+                          : 'bg-white text-gray-400 border-gray-100 hover:bg-gray-50 hover:text-gray-600'
+                      }`}
+                    >
+                      {labelMap[statusVal]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Observation Notes */}
+            <div className="mb-6">
+              <label htmlFor="notes" className="text-xs font-bold text-[#0E1B2B] block mb-2">
+                Observações de Resolução / Andamento
+              </label>
+              <textarea
+                id="notes"
+                rows={4}
+                value={newNotes}
+                onChange={(e) => setNewNotes(e.target.value)}
+                placeholder="Insira detalhes sobre as ações tomadas..."
+                className="w-full rounded-2xl border border-gray-200 p-3 text-xs font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3CDAB6] focus:border-[#3CDAB6] bg-gray-50/50 resize-none transition-all"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mt-8">
+              <button
+                type="button"
+                onClick={() => setIsUpdateModalOpen(false)}
+                className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-all cursor-pointer text-center"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={updating}
+                onClick={handleUpdateProcess}
+                className="flex-1 py-3 bg-[#0E1B2B] hover:bg-[#1c3552] text-white font-bold text-xs rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updating ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar Atualização'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

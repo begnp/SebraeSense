@@ -5,8 +5,10 @@ from models.customer import Customer
 from models.alert import Alert
 from models.telemetry import TelemetryEvent
 from models.feedback import Feedback
+from models.process import CustomerProcess
 from schemas.customer import CustomerProfileResponse, CustomerScores, ScoreItem, TimelineEventResponse, ProcessItemResponse, AlertStatusUpdate
 from schemas.feedback import FeedbackCreate, FeedbackResponse
+from schemas.process import ProcessStatusUpdate
 from datetime import datetime
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
@@ -91,6 +93,13 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
                 time=time_str,
                 type="alert"
             )))
+        elif e.event_type == "process_updated":
+            details = e.metadata_payload.get("details", "") if e.metadata_payload else ""
+            timeline_items.append((e.timestamp, TimelineEventResponse(
+                title=details,
+                time=time_str,
+                type="check" if "finalizado" in details.lower() else "eye"
+            )))
 
     # Alerts
     alerts = db.query(Alert).filter(Alert.customer_id == customer.id).all()
@@ -116,11 +125,31 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
             TimelineEventResponse(title="Abandono no formulário de crédito", time="Hoje, 10h30", type="alert")
         ]
 
-    # 5. Processos mockados
-    processes = [
-        ProcessItemResponse(id="#1038", title="Dúvida sobre documentação MEI", period="Hoje", dots=["green", "green", "gray"]),
-        ProcessItemResponse(id="#1037", title="Erro na emissão de nota fiscal", period="Esta semana", dots=["yellow", "yellow", "gray"])
-    ]
+    # 5. Buscar processos reais do banco
+    db_processes = db.query(CustomerProcess).filter(CustomerProcess.customer_id == customer.id).order_by(CustomerProcess.created_at.desc()).all()
+    processes = []
+    for p in db_processes:
+        if p.status == "aberto":
+            dots = ["green", "gray", "gray"]
+        elif p.status == "em_andamento":
+            dots = ["green", "yellow", "gray"]
+        elif p.status == "finalizado":
+            dots = ["green", "green", "green"]
+        else:
+            dots = ["gray", "gray", "gray"]
+            
+        period = "Hoje"
+        if p.created_at and p.created_at.date() < datetime.now().date():
+            period = "Esta semana"
+            
+        processes.append(ProcessItemResponse(
+            id=f"#{p.id}",
+            title=p.title,
+            period=period,
+            dots=dots,
+            status=p.status,
+            notes=p.notes
+        ))
 
     feedbacks = db.query(Feedback).filter(Feedback.customer_id == customer.id).order_by(Feedback.created_at.desc()).all()
 
@@ -242,3 +271,51 @@ def create_feedback(customer_id: int, payload: FeedbackCreate, db: Session = Dep
     db.commit()
     db.refresh(fb)
     return fb
+
+
+@router.patch("/processes/{process_id}")
+def update_process_status(process_id: int, payload: ProcessStatusUpdate, db: Session = Depends(get_db)):
+    process = db.query(CustomerProcess).filter(CustomerProcess.id == process_id).first()
+    if not process:
+        raise HTTPException(status_code=404, detail="Processo não encontrado")
+        
+    old_status = process.status
+    new_status = payload.status
+    
+    if new_status not in ["aberto", "em_andamento", "finalizado"]:
+        raise HTTPException(status_code=400, detail="Status inválido")
+        
+    process.status = new_status
+    if payload.notes is not None:
+        process.notes = payload.notes
+        
+    # Query customer to construct simulated notification
+    customer = db.query(Customer).filter(Customer.id == process.customer_id).first()
+    if customer:
+        status_pt = {
+            "aberto": "Aberto",
+            "em_andamento": "Em Andamento",
+            "finalizado": "Finalizado"
+        }.get(new_status, new_status)
+        
+        email_recipient = f"{customer.name.lower().replace(' ', '')}@gmail.com"
+        if customer.id == 1:
+            email_recipient = "joaosantos@gmail.com"
+        elif customer.id == 2:
+            email_recipient = "maria@padariastrela.com"
+            
+        print(f"\n>>> [NOTIFICAÇÃO ENVIADA AO CLIENTE] <<<\nCanal: {email_recipient}\nMensagem: Olá {customer.name}, o status do seu processo '#{process.id} - {process.title}' foi atualizado para '{status_pt}'.\nObservação: {payload.notes or 'Nenhuma'}\n")
+        
+        timeline_details = f"Sucesso: Processo atualizado para {status_pt} ({process.title})"
+        if payload.notes:
+            timeline_details += f" - Nota: {payload.notes}"
+            
+        event = TelemetryEvent(
+            customer_id=customer.id,
+            event_type="process_updated",
+            metadata_payload={"details": timeline_details}
+        )
+        db.add(event)
+        
+    db.commit()
+    return {"status": "success", "process_id": process.id, "new_status": process.status}

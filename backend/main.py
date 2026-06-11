@@ -5,6 +5,7 @@ from routers import dashboard
 from models.customer import Customer
 from models.alert import Alert
 from models.feedback import Feedback
+from models.process import CustomerProcess
 from routers import auth, dashboard, telemetry, customers
 from models.user import User
 
@@ -67,6 +68,19 @@ def seed_database():
         ])
         db.commit()
         print("Banco de dados semeado com sucesso!")
+
+    # Seeding Customer Processes if empty
+    if db.query(CustomerProcess).count() == 0:
+        c1 = db.query(Customer).filter(Customer.name == "João Santos").first()
+        c2 = db.query(Customer).filter(Customer.name == "Maria Silva").first()
+        if c1 and c2:
+            p1 = CustomerProcess(customer_id=c1.id, title="Dúvida sobre documentação MEI", status="aberto")
+            p2 = CustomerProcess(customer_id=c1.id, title="Erro na emissão de nota fiscal", status="em_andamento")
+            p3 = CustomerProcess(customer_id=c2.id, title="Solicitação de crédito MEI", status="aberto")
+            db.add_all([p1, p2, p3])
+            db.commit()
+            print("Processos iniciais de clientes semeados com sucesso!")
+
     db.close()
 
 @app.get("/health")

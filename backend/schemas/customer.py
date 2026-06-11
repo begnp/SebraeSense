@@ -28,6 +28,8 @@ class ProcessItemResponse(BaseModel):
     title: str
     period: str
     dots: List[str]
+    status: str
+    notes: Optional[str] = None
 
 class CustomerProfileResponse(BaseModel):
     id: int
