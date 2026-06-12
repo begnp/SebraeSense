@@ -87,7 +87,10 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({ users }) => {
           <h2 className="text-xl font-extrabold text-[#0E1B2B]">Fila Priorizada</h2>
           <p className="text-xs font-semibold text-gray-400 mt-0.5">Por ordem de atendimento</p>
         </div>
-        <button className="text-xs font-bold text-[#0E1B2B] hover:underline flex items-center gap-1 cursor-pointer">
+        <button 
+          onClick={() => navigate('/fila-priorizada')}
+          className="text-xs font-bold text-[#0E1B2B] hover:underline flex items-center gap-1 cursor-pointer"
+        >
           Ver todos <span className="text-sm font-light">→</span>
         </button>
       </div>

@@ -25,7 +25,7 @@ def format_short_date_pt(dt: datetime) -> str:
 
 @router.get("/", response_model=DashboardResponse)
 def get_dashboard_data(days: int = 30, db: Session = Depends(get_db)):
-    from routers.customers import reconcile_sla_alerts
+    from routers.customers import reconcile_sla_alerts, get_prioritized_customers
     reconcile_sla_alerts(db)
     start_date = datetime.now() - timedelta(days=days)
 
@@ -36,15 +36,15 @@ def get_dashboard_data(days: int = 30, db: Session = Depends(get_db)):
     
     stats = StatCardResponse(risks=risks, attention=attention, healthy=healthy)
     
-    # 2. Get Priority Queue (Top 4 with lowest CHS)
-    queue_customers = db.query(Customer).order_by(Customer.current_chs.asc()).limit(4).all()
+    # 2. Get Priority Queue (Top 4 based on full prioritized queue logic)
+    prioritized_list = get_prioritized_customers(db)
     queue = []
-    for c in queue_customers:
-        alerts_count = db.query(Alert).filter(
-            Alert.customer_id == c.id, 
-            Alert.status == "active",
-            Alert.created_at >= start_date
-        ).count()
+    for item in prioritized_list[:4]:
+        c = db.query(Customer).filter(Customer.id == item["id"]).first()
+        if not c:
+            continue
+            
+        alerts_count = item["alerts_count"]
         last_alert = db.query(Alert).filter(Alert.customer_id == c.id).order_by(Alert.created_at.desc()).first()
         reason = last_alert.reason if last_alert else "Sem histórico"
         

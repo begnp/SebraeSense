@@ -169,6 +169,10 @@ export function CustomerProfile() {
   const [newNotes, setNewNotes] = useState<string>('');
   const [updating, setUpdating] = useState(false);
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createTitle, setCreateTitle] = useState('');
+  const [creating, setCreating] = useState(false);
+
   const handleUpdateProcess = async () => {
     if (!selectedProcess) return;
     setUpdating(true);
@@ -212,6 +216,32 @@ export function CustomerProfile() {
       }
     } catch (err) {
       console.error('Erro ao recarregar dados do cliente:', err);
+    }
+  };
+
+  const handleCreateProcess = async () => {
+    if (!createTitle.trim()) return;
+    setCreating(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/customers/${id ?? 1}/processes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: createTitle }),
+      });
+      if (response.ok) {
+        setCreateTitle('');
+        setIsCreateModalOpen(false);
+        reloadCustomer();
+      } else {
+        alert('Erro ao registrar atendimento.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão ao registrar atendimento.');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -431,9 +461,16 @@ export function CustomerProfile() {
                 </button>
               </div>
 
-              {/* Processos abertos Card */}
               <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col h-full">
-                <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Processos abertos</h3>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-extrabold text-[#0E1B2B]">Processos abertos</h3>
+                  <button 
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="px-2.5 py-1.5 bg-[#0E1B2B] hover:bg-[#1c3552] text-white text-[10px] font-black rounded-lg transition-colors cursor-pointer"
+                  >
+                    + Novo Caso
+                  </button>
+                </div>
                 
                 <div className="flex flex-col gap-5 flex-1">
                   {customer.processes.map((proc, idx) => (
@@ -726,6 +763,71 @@ export function CustomerProfile() {
                   </>
                 ) : (
                   'Salvar Atualização'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Create Process Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white/95 backdrop-blur-md rounded-[32px] border border-gray-100/80 p-6 shadow-[0_10px_50px_rgba(0,0,0,0.15)] max-w-md w-full mx-auto animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Gestão de Ocorrências
+                </span>
+                <h3 className="text-xl font-extrabold text-[#0E1B2B] mt-0.5">
+                  Registrar Novo Atendimento
+                </h3>
+              </div>
+              <button 
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-650 transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Case Title Input */}
+            <div className="mb-6">
+              <label htmlFor="createTitle" className="text-xs font-bold text-[#0E1B2B] block mb-2">
+                Assunto / Título do Caso
+              </label>
+              <input
+                id="createTitle"
+                type="text"
+                value={createTitle}
+                onChange={(e) => setCreateTitle(e.target.value)}
+                placeholder="Ex: Reclamação sobre taxas DAS ou Dúvida de Crédito..."
+                className="w-full rounded-2xl border border-gray-200 p-3.5 text-xs font-semibold text-gray-750 focus:outline-none focus:ring-2 focus:ring-[#3CDAB6] focus:border-[#3CDAB6] bg-gray-50/50 transition-all"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mt-8">
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-all cursor-pointer text-center"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={creating || !createTitle.trim()}
+                onClick={handleCreateProcess}
+                className="flex-1 py-3 bg-[#0E1B2B] hover:bg-[#1c3552] text-white font-bold text-xs rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creating ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Registrando...
+                  </>
+                ) : (
+                  'Registrar Atendimento'
                 )}
               </button>
             </div>

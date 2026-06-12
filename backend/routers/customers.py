@@ -48,6 +48,56 @@ def get_all_customers(db: Session = Depends(get_db)):
     return result
 
 
+@router.get("/prioritized")
+def get_prioritized_customers(db: Session = Depends(get_db)):
+    customers = db.query(Customer).all()
+    result = []
+    for c in customers:
+        alerts_count = db.query(Alert).filter(Alert.customer_id == c.id, Alert.status == "active").count()
+        
+        last_event = db.query(TelemetryEvent).filter(TelemetryEvent.customer_id == c.id).order_by(TelemetryEvent.timestamp.desc()).first()
+        last_event_time = last_event.timestamp if last_event else None
+        
+        last_alert = db.query(Alert).filter(Alert.customer_id == c.id).order_by(Alert.created_at.desc()).first()
+        last_alert_time = last_alert.created_at if last_alert else None
+        
+        times = [t for t in [last_event_time, last_alert_time, c.updated_at, c.created_at] if t is not None]
+        last_contact = max(times) if times else datetime.now()
+        
+        if c.current_chs <= 40:
+            status = "Em Risco"
+            priority_group = 1
+        elif c.current_chs <= 70:
+            status = "Em Atenção"
+            priority_group = 2
+        else:
+            status = "Saudável"
+            priority_group = 3
+            
+        result.append({
+            "id": c.id,
+            "name": c.name,
+            "company": c.company,
+            "current_chs": c.current_chs,
+            "status": status,
+            "alerts_count": alerts_count,
+            "last_contact": last_contact,
+            "last_contact_str": format_datetime_pt(last_contact),
+            "priority_group": priority_group
+        })
+        
+    def get_sort_key(item):
+        ts = int(item["last_contact"].timestamp()) if item["last_contact"] else 0
+        return (item["priority_group"], item["current_chs"], -item["alerts_count"], -ts)
+        
+    sorted_result = sorted(result, key=get_sort_key)
+    
+    for item in sorted_result:
+        item.pop("last_contact")
+        
+    return sorted_result
+
+
 @router.get("/{customer_id}", response_model=CustomerProfileResponse)
 def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
     customer = db.query(Customer).filter(Customer.id == customer_id).first()

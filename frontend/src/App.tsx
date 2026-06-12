@@ -16,6 +16,7 @@ import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/settings";
 import { Alerts } from './pages/Alerts';
 import { CustomersList } from './pages/CustomersList';
+import { PriorityQueuePage } from './pages/PriorityQueuePage';
 
 interface ActiveAlert {
   id: number;
@@ -368,6 +369,7 @@ function App() {
         <Route path="/configuracoes" element={<PrivateRoute><Settings /></PrivateRoute>} />
         <Route path="/alertas" element={<PrivateRoute><Alerts /></PrivateRoute>} />
         <Route path="/clientes-lista" element={<PrivateRoute><CustomersList /></PrivateRoute>} />
+        <Route path="/fila-priorizada" element={<PrivateRoute><PriorityQueuePage /></PrivateRoute>} />
       </Routes>
       <TrackerViewer />
     </>

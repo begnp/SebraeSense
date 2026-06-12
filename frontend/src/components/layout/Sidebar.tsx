@@ -22,8 +22,8 @@ export const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
     if (path === '/') {
       return location.pathname === '/';
     }
-    if (path === '/clientes') {
-      return location.pathname === '/clientes' || location.pathname.startsWith('/clientes/');
+    if (path === '/clientes-lista') {
+      return location.pathname === '/clientes-lista' || location.pathname.startsWith('/clientes/');
     }
     return location.pathname.startsWith(path);
   };
@@ -55,9 +55,9 @@ export const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
           </li>
           <li>
             <Link 
-              to="/clientes/1" 
+              to="/fila-priorizada" 
               className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/clientes') 
+                isActive('/fila-priorizada') 
                   ? 'bg-[#6B4C9A] text-white' 
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
