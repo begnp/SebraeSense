@@ -23,6 +23,31 @@ def format_datetime_pt(dt: datetime) -> str:
     }
     return f"{dt.day} de {months.get(dt.month, '')} às {dt.strftime('%Hh%M')}"
 
+
+@router.get("")
+def get_all_customers(db: Session = Depends(get_db)):
+    customers = db.query(Customer).order_by(Customer.name.asc()).all()
+    result = []
+    for c in customers:
+        alerts_count = db.query(Alert).filter(Alert.customer_id == c.id, Alert.status == "active").count()
+        if c.current_chs <= 40:
+            status = "Em Risco"
+        elif c.current_chs <= 70:
+            status = "Em Atenção"
+        else:
+            status = "Saudável"
+            
+        result.append({
+            "id": c.id,
+            "name": c.name,
+            "company": c.company,
+            "current_chs": c.current_chs,
+            "status": status,
+            "alerts_count": alerts_count
+        })
+    return result
+
+
 @router.get("/{customer_id}", response_model=CustomerProfileResponse)
 def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
     customer = db.query(Customer).filter(Customer.id == customer_id).first()

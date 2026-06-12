@@ -22,6 +22,9 @@ export const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
     if (path === '/') {
       return location.pathname === '/';
     }
+    if (path === '/clientes') {
+      return location.pathname === '/clientes' || location.pathname.startsWith('/clientes/');
+    }
     return location.pathname.startsWith(path);
   };
 

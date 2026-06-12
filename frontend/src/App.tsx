@@ -14,6 +14,8 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/settings";
+import { Alerts } from './pages/Alerts';
+import { CustomersList } from './pages/CustomersList';
 
 interface ActiveAlert {
   id: number;
@@ -364,6 +366,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/configuracoes" element={<PrivateRoute><Settings /></PrivateRoute>} />
+        <Route path="/alertas" element={<PrivateRoute><Alerts /></PrivateRoute>} />
+        <Route path="/clientes-lista" element={<PrivateRoute><CustomersList /></PrivateRoute>} />
       </Routes>
       <TrackerViewer />
     </>
