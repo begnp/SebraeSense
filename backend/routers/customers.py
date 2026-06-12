@@ -9,7 +9,7 @@ from models.process import CustomerProcess
 from schemas.customer import CustomerProfileResponse, CustomerScores, ScoreItem, TimelineEventResponse, ProcessItemResponse, AlertStatusUpdate
 from schemas.feedback import FeedbackCreate, FeedbackResponse
 from schemas.process import ProcessStatusUpdate
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
 
@@ -125,7 +125,8 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
             TimelineEventResponse(title="Abandono no formulário de crédito", time="Hoje, 10h30", type="alert")
         ]
 
-    # 5. Buscar processos reais do banco
+    # 5. Buscar processos reais do banco e conciliar alertas de SLA
+    reconcile_sla_alerts(db, customer.id)
     db_processes = db.query(CustomerProcess).filter(CustomerProcess.customer_id == customer.id).order_by(CustomerProcess.created_at.desc()).all()
     processes = []
     for p in db_processes:
@@ -142,13 +143,26 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
         if p.created_at and p.created_at.date() < datetime.now().date():
             period = "Esta semana"
             
+        # SLA calculation
+        sla_status = "normal"
+        if p.status != "finalizado" and p.created_at:
+            now_aware = datetime.now(timezone.utc) if p.created_at.tzinfo else datetime.now()
+            elapsed_hours = (now_aware - p.created_at).total_seconds() / 3600.0
+            if elapsed_hours >= 24:
+                sla_status = "atrasado"
+            elif elapsed_hours >= 12:
+                sla_status = "atencao"
+        elif p.status == "finalizado":
+            sla_status = "finalizado"
+            
         processes.append(ProcessItemResponse(
             id=f"#{p.id}",
             title=p.title,
             period=period,
             dots=dots,
             status=p.status,
-            notes=p.notes
+            notes=p.notes,
+            sla_status=sla_status
         ))
 
     feedbacks = db.query(Feedback).filter(Feedback.customer_id == customer.id).order_by(Feedback.created_at.desc()).all()
@@ -336,5 +350,46 @@ def update_process_status(process_id: int, payload: ProcessStatusUpdate, db: Ses
         )
         db.add(event)
         
+    if new_status == "finalizado":
+        # Resolve any active SLA alert for this process
+        alert_reason_prefix = f"SLA Estourado: reclamação '#{process.id}"
+        sla_alerts = db.query(Alert).filter(
+            Alert.customer_id == process.customer_id,
+            Alert.status == "active",
+            Alert.reason.like(f"{alert_reason_prefix}%")
+        ).all()
+        for a in sla_alerts:
+            a.status = "resolved"
+        
     db.commit()
     return {"status": "success", "process_id": process.id, "new_status": process.status}
+
+
+def reconcile_sla_alerts(db: Session, customer_id: int = None):
+    # Query all active processes (not finalized)
+    query = db.query(CustomerProcess).filter(CustomerProcess.status != "finalizado")
+    if customer_id is not None:
+        query = query.filter(CustomerProcess.customer_id == customer_id)
+        
+    active_processes = query.all()
+    for p in active_processes:
+        if p.created_at:
+            now_aware = datetime.now(timezone.utc) if p.created_at.tzinfo else datetime.now()
+            elapsed_hours = (now_aware - p.created_at).total_seconds() / 3600.0
+            if elapsed_hours >= 24:
+                # Check if alert already exists for this process
+                alert_reason_prefix = f"SLA Estourado: reclamação '#{p.id}"
+                existing_alert = db.query(Alert).filter(
+                    Alert.customer_id == p.customer_id,
+                    Alert.status == "active",
+                    Alert.reason.like(f"{alert_reason_prefix}%")
+                ).first()
+                
+                if not existing_alert:
+                    new_alert = Alert(
+                        customer_id=p.customer_id,
+                        reason=f"SLA Estourado: reclamação '#{p.id} - {p.title}' sem resposta há mais de 24h",
+                        status="active"
+                    )
+                    db.add(new_alert)
+                    db.commit()

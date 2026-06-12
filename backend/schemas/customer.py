@@ -30,6 +30,7 @@ class ProcessItemResponse(BaseModel):
     dots: List[str]
     status: str
     notes: Optional[str] = None
+    sla_status: str
 
 class CustomerProfileResponse(BaseModel):
     id: int

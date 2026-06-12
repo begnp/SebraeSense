@@ -7,7 +7,7 @@ import {
 
 interface ScoreItem { value: number; max: number; color: 'yellow' | 'red' | 'green'; }
 interface TimelineEvent { title: string; time: string; type: 'alert' | 'eye' | 'check'; alert_id?: number; status?: string; }
-interface ProcessItem { id: string; title: string; period: string; dots: ('green' | 'yellow' | 'gray')[]; status: string; notes?: string; }
+interface ProcessItem { id: string; title: string; period: string; dots: ('green' | 'yellow' | 'gray')[]; status: string; notes?: string; sla_status: string; }
 interface FeedbackItem { id: number; comment: string; rating?: number; sentiment: 'positive' | 'neutral' | 'negative' | string; created_at: string; }
 
 interface CustomerData {
@@ -447,6 +447,27 @@ export function CustomerProfile() {
                               />
                             ))}
                           </div>
+                        </div>
+
+                        {/* SLA Status Badge */}
+                        <div className="flex items-center justify-between border-t border-gray-50 pt-2 flex-wrap gap-2">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${
+                            proc.sla_status === 'atrasado'
+                              ? 'bg-red-50 text-red-500 border-red-100'
+                              : proc.sla_status === 'atencao'
+                              ? 'bg-yellow-50 text-yellow-700 border-yellow-100'
+                              : proc.sla_status === 'finalizado'
+                              ? 'bg-gray-100 text-gray-500 border-gray-200'
+                              : 'bg-green-50 text-green-600 border-green-100'
+                          }`}>
+                            {proc.sla_status === 'atrasado'
+                              ? 'SLA: Estourado'
+                              : proc.sla_status === 'atencao'
+                              ? 'SLA: Em Atenção'
+                              : proc.sla_status === 'finalizado'
+                              ? 'SLA: Finalizado'
+                              : 'SLA: No Prazo'}
+                          </span>
                         </div>
 
                         <button 

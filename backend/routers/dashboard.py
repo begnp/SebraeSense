@@ -25,6 +25,8 @@ def format_short_date_pt(dt: datetime) -> str:
 
 @router.get("/", response_model=DashboardResponse)
 def get_dashboard_data(days: int = 30, db: Session = Depends(get_db)):
+    from routers.customers import reconcile_sla_alerts
+    reconcile_sla_alerts(db)
     start_date = datetime.now() - timedelta(days=days)
 
     # 1. Calculate Stats
