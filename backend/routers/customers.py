@@ -8,7 +8,7 @@ from models.feedback import Feedback
 from models.process import CustomerProcess
 from schemas.customer import CustomerProfileResponse, CustomerScores, ScoreItem, TimelineEventResponse, ProcessItemResponse, AlertStatusUpdate
 from schemas.feedback import FeedbackCreate, FeedbackResponse
-from schemas.process import ProcessStatusUpdate
+from schemas.process import ProcessStatusUpdate, ProcessCreate, ProcessOptInUpdate
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
@@ -162,7 +162,8 @@ def get_customer_profile(customer_id: int, db: Session = Depends(get_db)):
             dots=dots,
             status=p.status,
             notes=p.notes,
-            sla_status=sla_status
+            sla_status=sla_status,
+            opt_in=p.opt_in if p.opt_in is not None else False
         ))
 
     feedbacks = db.query(Feedback).filter(Feedback.customer_id == customer.id).order_by(Feedback.created_at.desc()).all()
@@ -393,3 +394,117 @@ def reconcile_sla_alerts(db: Session, customer_id: int = None):
                     )
                     db.add(new_alert)
                     db.commit()
+
+
+@router.post("/{customer_id}/processes")
+def create_customer_process(customer_id: int, payload: ProcessCreate, db: Session = Depends(get_db)):
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        customer = db.query(Customer).first()
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer não encontrado")
+            
+    process = CustomerProcess(
+        customer_id=customer.id,
+        title=payload.title,
+        status="aberto",
+        opt_in=False
+    )
+    db.add(process)
+    db.commit()
+    db.refresh(process)
+    
+    # Print simulated email confirmation to stdout
+    email_recipient = f"{customer.name.lower().replace(' ', '')}@gmail.com"
+    if customer.id == 1:
+        email_recipient = "joaosantos@gmail.com"
+    elif customer.id == 2:
+        email_recipient = "maria@padariastrela.com"
+        
+    print(f"\n>>> [CONFIRMAÇÃO ENVIADA POR E-MAIL] <<<\nDestinatário: {email_recipient}\nAssunto: Recebemos seu feedback: #{process.id} - {process.title}\nMensagem: Olá {customer.name}, recebemos sua manifestação. Para acompanhar o andamento digitalmente e receber alertas rápidos em tempo real, clique no botão de autorização/Opt-in.\n")
+    
+    return {
+        "status": "success",
+        "process_id": process.id,
+        "title": process.title,
+        "process_status": process.status,
+        "opt_in": process.opt_in
+    }
+
+
+@router.patch("/processes/{process_id}/opt-in")
+def update_process_opt_in(process_id: int, payload: ProcessOptInUpdate, db: Session = Depends(get_db)):
+    process = db.query(CustomerProcess).filter(CustomerProcess.id == process_id).first()
+    if not process:
+        raise HTTPException(status_code=404, detail="Processo não encontrado")
+        
+    process.opt_in = payload.opt_in
+    
+    # Add dynamic timeline event
+    customer = db.query(Customer).filter(Customer.id == process.customer_id).first()
+    if customer and payload.opt_in:
+        print(f"\n>>> [CONSENTIMENTO REGISTRADO] <<<\nCliente: {customer.name}\nProcesso: #{process.id} - {process.title}\nStatus: Opt-In Ativado para Notificações Digitais\n")
+        
+        event = TelemetryEvent(
+            customer_id=customer.id,
+            event_type="process_updated",
+            metadata_payload={"details": f"Sucesso: Consentimento de notificações recebido para o processo #{process.id} ({process.title})"}
+        )
+        db.add(event)
+        
+    db.commit()
+    return {"status": "success", "process_id": process.id, "opt_in": process.opt_in}
+
+
+@router.post("/{customer_id}/reset")
+def reset_customer_sandbox(customer_id: int, db: Session = Depends(get_db)):
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    
+    # 1. Reset CHS and sub-scores
+    customer.current_chs = 18
+    customer.engagement_score = 20
+    customer.progression_score = 40
+    customer.success_score = 30
+    
+    # 2. Delete all Feedbacks for this customer
+    db.query(Feedback).filter(Feedback.customer_id == customer_id).delete()
+    
+    # 3. Delete all Telemetry events for this customer
+    db.query(TelemetryEvent).filter(TelemetryEvent.customer_id == customer_id).delete()
+    
+    # 4. Delete all Processes for this customer
+    db.query(CustomerProcess).filter(CustomerProcess.customer_id == customer_id).delete()
+    
+    # 5. Delete all Alerts for this customer
+    db.query(Alert).filter(Alert.customer_id == customer_id).delete()
+    
+    # 6. Re-seed default alerts and processes if this is Customer 1 (João Santos)
+    if customer_id == 1:
+        # Initial processes
+        p1 = CustomerProcess(customer_id=customer_id, title="Dúvida sobre documentação MEI", status="aberto")
+        p2 = CustomerProcess(customer_id=customer_id, title="Erro na emissão de nota fiscal", status="em_andamento")
+        db.add_all([p1, p2])
+        
+        # Initial alerts
+        db.add_all([
+            Alert(customer_id=customer_id, reason="3 erros consecutivos no cadastro"),
+            Alert(customer_id=customer_id, reason="Abandono do fluxo principal"),
+            Alert(customer_id=customer_id, reason="Queda brusca de engajamento"),
+            Alert(customer_id=customer_id, reason="Reclamação sobre o Curso de Gestão Financeira"),
+        ])
+    elif customer_id == 2:
+        # Maria Silva seeds
+        p3 = CustomerProcess(customer_id=customer_id, title="Solicitação de crédito MEI", status="aberto")
+        db.add(p3)
+        db.add_all([
+            Alert(customer_id=customer_id, reason="Inatividade de 30 dias + tarefa abandonada"),
+            Alert(customer_id=customer_id, reason="Baixo índice de sucesso"),
+            Alert(customer_id=customer_id, reason="Reporte de erro não resolvido"),
+            Alert(customer_id=customer_id, reason="Dificuldade no credenciamento do Evento Sebrae"),
+        ])
+        
+    db.commit()
+    return {"status": "success", "message": f"Sandbox do cliente {customer_id} reiniciado com sucesso!"}
+

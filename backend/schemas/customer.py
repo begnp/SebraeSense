@@ -31,6 +31,7 @@ class ProcessItemResponse(BaseModel):
     status: str
     notes: Optional[str] = None
     sla_status: str
+    opt_in: bool
 
 class CustomerProfileResponse(BaseModel):
     id: int
