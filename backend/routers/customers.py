@@ -7,7 +7,7 @@ from models.telemetry import TelemetryEvent
 from models.feedback import Feedback
 from models.process import CustomerProcess
 from schemas.customer import CustomerProfileResponse, CustomerScores, ScoreItem, TimelineEventResponse, ProcessItemResponse, AlertStatusUpdate
-from schemas.feedback import FeedbackCreate, FeedbackResponse
+from schemas.feedback import FeedbackCreate, FeedbackResponse, FeedbackRespond
 from schemas.process import ProcessStatusUpdate, ProcessCreate, ProcessOptInUpdate
 from datetime import datetime, timezone
 
@@ -305,6 +305,37 @@ def create_feedback(customer_id: int, payload: FeedbackCreate, db: Session = Dep
     db.commit()
     db.refresh(fb)
     return fb
+
+
+@router.patch("/feedback/{feedback_id}/respond", response_model=FeedbackResponse)
+def respond_to_feedback(feedback_id: int, payload: FeedbackRespond, db: Session = Depends(get_db)):
+    feedback = db.query(Feedback).filter(Feedback.id == feedback_id).first()
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Feedback não encontrado")
+    
+    feedback.response = payload.response
+    feedback.responded_at = datetime.now()
+    
+    customer = db.query(Customer).filter(Customer.id == feedback.customer_id).first()
+    if customer:
+        email_recipient = f"{customer.name.lower().replace(' ', '')}@gmail.com"
+        if customer.id == 1:
+            email_recipient = "joaosantos@gmail.com"
+        elif customer.id == 2:
+            email_recipient = "maria@padariastrela.com"
+            
+        print(f"\n>>> [NOTIFICAÇÃO DE RESPOSTA ENVIADA AO CLIENTE] <<<\nDestinatário: {email_recipient}\nAssunto: Resposta ao seu feedback sobre serviços Sebrae\nMensagem: Olá {customer.name}, a equipe Sebrae respondeu ao seu comentário: \"{feedback.comment[:40]}...\".\nResposta: {payload.response}\n")
+        
+        event = TelemetryEvent(
+            customer_id=customer.id,
+            event_type="process_updated",
+            metadata_payload={"details": f"CX: Resposta enviada para o feedback: \"{payload.response[:40]}...\""}
+        )
+        db.add(event)
+        
+    db.commit()
+    db.refresh(feedback)
+    return feedback
 
 
 @router.patch("/processes/{process_id}")

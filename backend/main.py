@@ -31,6 +31,16 @@ app.include_router(customers.router)
 
 @app.on_event("startup")
 def seed_database():
+    # Run manual migration for new Feedback columns
+    try:
+        from sqlalchemy import text
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN IF NOT EXISTS response VARCHAR;"))
+            conn.execute(text("ALTER TABLE feedbacks ADD COLUMN IF NOT EXISTS responded_at TIMESTAMP WITH TIME ZONE;"))
+        print("Migrações de banco de dados executadas com sucesso!")
+    except Exception as e:
+        print(f"Erro ao rodar migrações manuais: {e}")
+
     db = SessionLocal()
     # Verifica se já existem clientes
     if db.query(Customer).count() == 0:

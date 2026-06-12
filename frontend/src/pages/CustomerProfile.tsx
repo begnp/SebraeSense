@@ -8,7 +8,7 @@ import {
 interface ScoreItem { value: number; max: number; color: 'yellow' | 'red' | 'green'; }
 interface TimelineEvent { title: string; time: string; type: 'alert' | 'eye' | 'check'; alert_id?: number; status?: string; }
 interface ProcessItem { id: string; title: string; period: string; dots: ('green' | 'yellow' | 'gray')[]; status: string; notes?: string; sla_status: string; }
-interface FeedbackItem { id: number; comment: string; rating?: number; sentiment: 'positive' | 'neutral' | 'negative' | string; created_at: string; }
+interface FeedbackItem { id: number; comment: string; rating?: number; sentiment: 'positive' | 'neutral' | 'negative' | string; response?: string; responded_at?: string; created_at: string; }
 
 interface CustomerData {
   id: number;
@@ -200,6 +200,18 @@ export function CustomerProfile() {
       alert('Erro ao atualizar o processo: ' + err.message);
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const reloadCustomer = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCustomer(data);
+      }
+    } catch (err) {
+      console.error('Erro ao recarregar dados do cliente:', err);
     }
   };
 
@@ -534,10 +546,25 @@ export function CustomerProfile() {
                             : 'NEUTRO'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-700 leading-relaxed font-semibold">{fb.comment}</p>
+                      <p className="text-xs text-gray-700 leading-relaxed font-semibold">"{fb.comment}"</p>
                       <span className="text-[10px] text-gray-400 font-semibold mt-1">
                         Registrado em {new Date(fb.created_at).toLocaleDateString('pt-BR')}
                       </span>
+
+                      {/* Visual response or response form */}
+                      {fb.response ? (
+                        <div className="mt-3 ml-2 p-3 bg-white border-l-4 border-purple-500 rounded-r-2xl flex flex-col gap-1.5 shadow-sm">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider">Resposta Sebrae</span>
+                            <span className="text-[9px] text-gray-400 font-bold">
+                              {fb.responded_at ? new Date(fb.responded_at).toLocaleDateString('pt-BR') : ''}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 leading-relaxed font-medium">{fb.response}</p>
+                        </div>
+                      ) : (
+                        <FeedbackReplyForm feedbackId={fb.id} onReplied={reloadCustomer} />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -706,5 +733,78 @@ export function CustomerProfile() {
         </div>
       )}
     </MainLayout>
+  );
+}
+
+function FeedbackReplyForm({ feedbackId, onReplied }: { feedbackId: number; onReplied: () => void }) {
+  const [replyText, setReplyText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+    setSubmitting(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/customers/feedback/${feedbackId}/respond`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ response: replyText }),
+      });
+      if (response.ok) {
+        setReplyText('');
+        setShowForm(false);
+        onReplied();
+      } else {
+        alert('Erro ao enviar resposta.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de rede ao responder feedback.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!showForm) {
+    return (
+      <button
+        onClick={() => setShowForm(true)}
+        className="mt-2 text-[10.5px] font-bold text-purple-600 hover:text-purple-800 hover:underline w-fit text-left cursor-pointer flex items-center gap-1"
+      >
+        <span>+ Responder feedback</span>
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-3.5 flex flex-col gap-2 bg-white p-3.5 rounded-2xl border border-purple-100 shadow-sm">
+      <span className="text-[10px] font-extrabold text-[#0E1B2B] uppercase">Nova Resposta Sebrae</span>
+      <textarea
+        value={replyText}
+        onChange={(e) => setReplyText(e.target.value)}
+        placeholder="Escreva uma resposta direta e objetiva..."
+        rows={2}
+        className="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 bg-gray-50/50 text-gray-700 placeholder-gray-400"
+      />
+      <div className="flex gap-2.5 self-end">
+        <button
+          type="button"
+          onClick={() => setShowForm(false)}
+          className="px-3 py-1.5 text-[10px] font-bold text-gray-400 hover:text-gray-650 cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          disabled={submitting || !replyText.trim()}
+          className="px-4 py-1.5 bg-[#0E1B2B] hover:bg-[#152a42] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {submitting ? 'Enviando...' : 'Enviar Resposta'}
+        </button>
+      </div>
+    </form>
   );
 }

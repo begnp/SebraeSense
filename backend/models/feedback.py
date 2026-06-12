@@ -11,6 +11,8 @@ class Feedback(Base):
     comment = Column(String)
     rating = Column(Integer, nullable=True)
     sentiment = Column(String) # positive, neutral, negative
+    response = Column(String, nullable=True)
+    responded_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationship

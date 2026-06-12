@@ -929,6 +929,14 @@ export function MiniSebraeTask() {
                         </div>
                         
                         <p className="text-xs text-gray-700 leading-relaxed font-bold">"{fb.comment}"</p>
+                        
+                        {fb.response && (
+                          <div className="mt-2 p-2.5 bg-purple-50/50 border-l-2 border-purple-400 rounded-r-lg flex flex-col gap-0.5">
+                            <span className="text-[9px] font-extrabold text-purple-600 uppercase tracking-wide">Resposta do Sebrae:</span>
+                            <p className="text-[11px] text-gray-600 font-medium leading-relaxed">{fb.response}</p>
+                          </div>
+                        )}
+
                         <span className="text-[9px] text-gray-400 font-bold self-end">
                           {new Date(fb.created_at).toLocaleDateString('pt-BR')}
                         </span>

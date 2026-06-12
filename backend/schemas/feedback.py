@@ -12,7 +12,12 @@ class FeedbackResponse(BaseModel):
     comment: str
     rating: Optional[int] = None
     sentiment: str
+    response: Optional[str] = None
+    responded_at: Optional[datetime] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+class FeedbackRespond(BaseModel):
+    response: str
