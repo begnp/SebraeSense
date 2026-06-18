@@ -5,11 +5,10 @@ services:
     image: postgres:15-alpine
     container_name: sense_postgres
     environment:
-      POSTGRES_USER: sense_user
-      POSTGRES_PASSWORD: sense_password
-      POSTGRES_DB: sense_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-sense_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sense_password}
+      POSTGRES_DB: ${POSTGRES_DB:-sense_db}
+    # Porta removida para segurança: o banco só será acessível internamente pelo backend
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -19,8 +18,8 @@ services:
       context: ./backend
     container_name: sense_backend
     environment:
-      - DATABASE_URL=postgresql://sense_user:sense_password@db:5432/sense_db
-      - SECRET_KEY=minha_chave_secreta_super_segura
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-sense_user}:${POSTGRES_PASSWORD:-sense_password}@db:5432/${POSTGRES_DB:-sense_db}
+      - SECRET_KEY=${SECRET_KEY:-minha_chave_secreta_super_segura}
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
     ports:
