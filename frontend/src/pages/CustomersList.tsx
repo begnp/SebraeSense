@@ -21,7 +21,7 @@ export function CustomersList() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://sebraesense-api.onrender.com/api/customers');
+      const res = await fetch('https://sebraesense-api.onrender.com/api/customers');
       if (res.ok) {
         const data = await res.json();
         setCustomers(data);

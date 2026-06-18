@@ -23,7 +23,7 @@ export function PriorityQueuePage() {
   const fetchPrioritizedCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://sebraesense-api.onrender.com/api/customers/prioritized');
+      const res = await fetch('https://sebraesense-api.onrender.com/api/customers/prioritized');
       if (res.ok) {
         const data = await res.json();
         setCustomers(data);

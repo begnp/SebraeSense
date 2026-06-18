@@ -168,7 +168,7 @@ export function MiniSebraeHome() {
     setIsBooking(true);
     try {
       // Registers a process directly on the CRM database for user João Santos (ID 1)
-      const res = await fetch('http://sebraesense-api.onrender.com/api/customers/1/processes', {
+      const res = await fetch('https://sebraesense-api.onrender.com/api/customers/1/processes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

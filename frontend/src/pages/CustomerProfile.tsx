@@ -267,7 +267,7 @@ export function CustomerProfile() {
 
   const handleResolveAlert = async (alertId: number, status: 'resolved' | 'false_positive') => {
     try {
-      const response = await fetch(`http://sebraesense-api.onrender.com/api/customers/alerts/${alertId}`, {
+      const response = await fetch(`https://sebraesense-api.onrender.com/api/customers/alerts/${alertId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ export function CustomerProfile() {
       if (!response.ok) {
         throw new Error('Falha ao atualizar o alerta');
       }
-      const profileRes = await fetch(`http://sebraesense-api.onrender.com/api/customers/${id ?? 1}`);
+      const profileRes = await fetch(`https://sebraesense-api.onrender.com/api/customers/${id ?? 1}`);
       if (profileRes.ok) {
         const updatedCustomer = await profileRes.json();
         setCustomer(updatedCustomer);
@@ -848,7 +848,7 @@ function FeedbackReplyForm({ feedbackId, onReplied }: { feedbackId: number; onRe
     if (!replyText.trim()) return;
     setSubmitting(true);
     try {
-      const response = await fetch(`http://sebraesense-api.onrender.com/api/customers/feedback/${feedbackId}/respond`, {
+      const response = await fetch(`https://sebraesense-api.onrender.com/api/customers/feedback/${feedbackId}/respond`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
