@@ -61,7 +61,7 @@ export const useDashboardData = (days: number = 30) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/dashboard/?days=${days}`);
+        const response = await fetch(`https://sebraesense-api.onrender.com/api/dashboard/?days=${days}`);
         if (!response.ok) {
           throw new Error('Falha ao buscar dados da API');
         }

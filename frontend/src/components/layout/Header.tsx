@@ -20,7 +20,7 @@ export const Header = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => 
 
   const fetchActiveAlerts = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/customers/alerts/active');
+      const res = await fetch('https://sebraesense-api.onrender.com');
       if (res.ok) {
         const data = await res.json();
         setAlerts(data);

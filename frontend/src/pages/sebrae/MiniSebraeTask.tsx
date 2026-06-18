@@ -39,13 +39,13 @@ export function MiniSebraeTask() {
   const fetchCustomerData = async () => {
     setLoadingCustomer(true);
     try {
-      const res = await fetch('http://localhost:8000/api/customers/1');
+      const res = await fetch('http://sebraesense-api.onrender.com/api/customers/1');
       if (res.ok) {
         const data = await res.json();
         setCustomer(data);
       }
       
-      const alertsRes = await fetch('http://localhost:8000/api/customers/alerts/active');
+      const alertsRes = await fetch('http://sebraesense-api.onrender.com/api/customers/alerts/active');
       if (alertsRes.ok) {
         const alertsData = await alertsRes.json();
         // Filter alerts for client ID 1 (João Santos)
@@ -89,7 +89,7 @@ export function MiniSebraeTask() {
     if (!newProcessTitle.trim()) return;
     setSubmittingProcess(true);
     try {
-      const res = await fetch('http://localhost:8000/api/customers/1/processes', {
+      const res = await fetch('http://sebraesense-api.onrender.com/api/customers/1/processes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ export function MiniSebraeTask() {
   const handleOptIn = async (processIdStr: string) => {
     const cleanId = processIdStr.replace('#', '');
     try {
-      const res = await fetch(`http://localhost:8000/api/customers/processes/${cleanId}/opt-in`, {
+      const res = await fetch(`http://sebraesense-api.onrender.com/api/customers/processes/${cleanId}/opt-in`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ export function MiniSebraeTask() {
 
   const handleSimulateManualRageClick = async () => {
     try {
-      await fetch('http://localhost:8000/api/telemetry/', {
+      await fetch('http://sebraesense-api.onrender.com/api/telemetry/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export function MiniSebraeTask() {
   const handleSendFeedback = async () => {
     setSendingFeedback(true);
     try {
-      const response = await fetch('http://localhost:8000/api/customers/1/feedback', {
+      const response = await fetch('http://sebraesense-api.onrender.com/api/customers/1/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ export function MiniSebraeTask() {
     setUpdatingProcess(true);
     const cleanId = processIdStr.replace('#', '');
     try {
-      const res = await fetch(`http://localhost:8000/api/customers/processes/${cleanId}`, {
+      const res = await fetch(`http://sebraesense-api.onrender.com/api/customers/processes/${cleanId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ export function MiniSebraeTask() {
   // Agent resolves alert or sets it as false positive
   const handleResolveAlert = async (alertId: number, status: 'resolved' | 'false_positive') => {
     try {
-      const response = await fetch(`http://localhost:8000/api/customers/alerts/${alertId}`, {
+      const response = await fetch(`http://sebraesense-api.onrender.com/api/customers/alerts/${alertId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -227,7 +227,7 @@ export function MiniSebraeTask() {
   const handleResetSandbox = async () => {
     if (!window.confirm('Tem certeza de que deseja reiniciar o sandbox de simulação? Isso restaurará o score CHS para 18 e removerá processos e feedbacks criados.')) return;
     try {
-      const res = await fetch('http://localhost:8000/api/customers/1/reset', {
+      const res = await fetch('http://sebraesense-api.onrender.com/api/customers/1/reset', {
         method: 'POST'
       });
       if (res.ok) {

@@ -178,7 +178,7 @@ export function CustomerProfile() {
     setUpdating(true);
     try {
       const cleanId = selectedProcess.id.replace('#', '');
-      const response = await fetch(`http://localhost:8000/api/customers/processes/${cleanId}`, {
+      const response = await fetch(`https://sebraesense-api.onrender.com/api/customers/processes/${cleanId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -193,7 +193,7 @@ export function CustomerProfile() {
         throw new Error('Falha ao atualizar o processo');
       }
 
-      const profileRes = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+      const profileRes = await fetch(`https://sebraesense-api.onrender.com/api/customers/${id ?? 1}`);
       if (profileRes.ok) {
         const updatedCustomer = await profileRes.json();
         setCustomer(updatedCustomer);
@@ -209,7 +209,7 @@ export function CustomerProfile() {
 
   const reloadCustomer = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+      const response = await fetch(`https://sebraesense-api.onrender.com/api/customers/${id ?? 1}`);
       if (response.ok) {
         const data = await response.json();
         setCustomer(data);
@@ -223,7 +223,7 @@ export function CustomerProfile() {
     if (!createTitle.trim()) return;
     setCreating(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/customers/${id ?? 1}/processes`, {
+      const response = await fetch(`https://sebraesense-api.onrender.com/api/customers/${id ?? 1}/processes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +249,7 @@ export function CustomerProfile() {
     const fetchCustomer = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+        const response = await fetch(`https://sebraesense-api.onrender.com/api/customers/${id ?? 1}`);
         if (!response.ok) {
           throw new Error('Falha ao buscar dados do cliente');
         }
@@ -267,7 +267,7 @@ export function CustomerProfile() {
 
   const handleResolveAlert = async (alertId: number, status: 'resolved' | 'false_positive') => {
     try {
-      const response = await fetch(`http://localhost:8000/api/customers/alerts/${alertId}`, {
+      const response = await fetch(`http://sebraesense-api.onrender.com/api/customers/alerts/${alertId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ export function CustomerProfile() {
       if (!response.ok) {
         throw new Error('Falha ao atualizar o alerta');
       }
-      const profileRes = await fetch(`http://localhost:8000/api/customers/${id ?? 1}`);
+      const profileRes = await fetch(`http://sebraesense-api.onrender.com/api/customers/${id ?? 1}`);
       if (profileRes.ok) {
         const updatedCustomer = await profileRes.json();
         setCustomer(updatedCustomer);
@@ -848,7 +848,7 @@ function FeedbackReplyForm({ feedbackId, onReplied }: { feedbackId: number; onRe
     if (!replyText.trim()) return;
     setSubmitting(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/customers/feedback/${feedbackId}/respond`, {
+      const response = await fetch(`http://sebraesense-api.onrender.com/api/customers/feedback/${feedbackId}/respond`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

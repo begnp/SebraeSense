@@ -49,7 +49,7 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const fetchActiveAlerts = async () => {
       setLoading(true);
       try {
-        const res = await fetch('http://localhost:8000/api/customers/alerts/active');
+        const res = await fetch('https://sebraesense-api.onrender.com');
         if (res.ok) {
           const data = await res.json();
           setAlerts(data);
