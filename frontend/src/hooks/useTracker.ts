@@ -6,7 +6,7 @@ interface TrackerOptions {
 
 const sendTelemetryToServer = async (eventType: string, payload: any) => {
   try {
-    await fetch('http://localhost:8000/api/telemetry/', {
+    await fetch('https://sebraesense-api.onrender.com/api/telemetry/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
