@@ -49,7 +49,7 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const fetchActiveAlerts = async () => {
       setLoading(true);
       try {
-        const res = await fetch('https://sebraesense-api.onrender.com');
+        const res = await fetch(import.meta.env.VITE_API_URL + '');
         if (res.ok) {
           const data = await res.json();
           setAlerts(data);

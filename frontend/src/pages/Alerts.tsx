@@ -32,7 +32,7 @@ export function Alerts() {
   const fetchActiveAlerts = async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://sebraesense-api.onrender.com');
+      const res = await fetch(import.meta.env.VITE_API_URL + '');
       if (res.ok) {
         const data = await res.json();
         setAlerts(data);
@@ -50,7 +50,7 @@ export function Alerts() {
 
   const handleResolveAlert = async (alertId: number, status: 'resolved' | 'false_positive') => {
     try {
-      const response = await fetch(`https://sebraesense-api.onrender.com/api/customers/alerts/${alertId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/customers/alerts/${alertId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

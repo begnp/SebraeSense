@@ -20,7 +20,7 @@ export const Header = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => 
 
   const fetchActiveAlerts = async () => {
     try {
-      const res = await fetch('https://sebraesense-api.onrender.com');
+      const res = await fetch(import.meta.env.VITE_API_URL + '');
       if (res.ok) {
         const data = await res.json();
         setAlerts(data);
