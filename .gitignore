@@ -18,6 +18,10 @@ backend/htmlcov/
 backend/.env
 backend/.venv
 
+# Configurações de ambiente locais
+.env
+.env.*
+
 # Docker
 .docker/
 docker-compose.override.yml
