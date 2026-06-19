@@ -173,7 +173,7 @@ function ActiveAlertsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 }
 
 function Dashboard() {
-  const [days, setDays] = useState(30);
+  const days = 30;
   const { data, loading, error } = useDashboardData(days);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
 
@@ -201,144 +201,114 @@ function Dashboard() {
 
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6 font-sans">
-        
-        {/* Dashboard Header with Date Filter */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white rounded-[24px] p-6 border border-gray-100/50 shadow-[0_4px_24px_rgba(52,180,166,0.02)]">
-          <div>
-            <h2 className="text-xl font-extrabold text-[#0E1B2B]">Painel de Controle</h2>
-            <p className="text-xs text-gray-400 font-semibold mt-0.5">Acompanhamento de saúde e telemetria dos clientes</p>
-          </div>
+      <div className="flex flex-col gap-6 font-sans h-full">
+        {/* Main Content Grid (Left Area Span 9, Right Area Span 3) */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch flex-1">
           
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/50 flex-shrink-0">
-            {[7, 15, 30].map((d) => (
-              <button
-                key={d}
-                onClick={() => setDays(d)}
-                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  days === d 
-                    ? 'bg-[#0E1B2B] text-white shadow-sm' 
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                {d} dias
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Top KPIs Row (4 Cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            icon={<Info size={22} />}
-            count={data.stats.risks + data.stats.attention + data.stats.healthy}
-            title="Clientes totais"
-            colorScheme="grey"
-          />
-          <StatCard
-            icon={<AlertTriangle size={22} />}
-            count={data.stats.risks}
-            title="Em risco"
-            colorScheme="red"
-          />
-          <StatCard
-            icon={<Eye size={22} />}
-            count={data.stats.attention}
-            title="Em atenção"
-            colorScheme="yellow"
-          />
-          <StatCard
-            icon={<ShieldCheck size={22} />}
-            count={data.stats.healthy}
-            title="Saudáveis"
-            colorScheme="green"
-          />
-        </div>
-
-        {/* Main Content Grid (Left Span 8, Right Span 4) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* Left Column (Span 8) */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          {/* Left Area (Span 8) */}
+          <div className="xl:col-span-8 flex flex-col gap-6">
             
-            {/* Alertas de Clientes Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100 flex flex-col sm:flex-row gap-6 justify-between">
+            {/* Top Row of Left Area: Alertas + KPIs */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* Left Side: Title and Icon */}
-              <div className="flex items-start gap-4 flex-1">
-                <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-[#0E1B2B]">
-                  <Bell size={24} />
-                </div>
-                <div className="flex flex-col">
-                  <h3 className="text-xl font-extrabold text-[#0E1B2B] mt-1.5">
+              {/* Alertas de Clientes (Span 1) */}
+              <div className="lg:col-span-1 flex flex-col">
+                <div className="bg-[#F4FBFA] rounded-[24px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col h-full relative">
+                  <h3 className="text-xl font-extrabold text-[#0E1B2B] mb-6 flex items-center gap-2">
+                    <Bell size={22} className="text-[#0E1B2B]" />
                     Alertas de Clientes
                   </h3>
+
+                  {/* Box with list of alerts */}
+                  <div className="bg-[#E4F8F4] rounded-[20px] p-5 flex flex-col gap-4 flex-1">
+                    <span className="text-sm font-extrabold text-[#0E1B2B]">
+                      Últimos {days} dias
+                    </span>
+                    
+                    <div className="flex flex-col gap-4">
+                      <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
+                        <span>Inatividade prolongada</span>
+                        <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.inatividade}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
+                        <span>Erro em tarefa crítica</span>
+                        <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.erro_critico}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
+                        <span>Suporte sem resolução</span>
+                        <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.suporte}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
+                        <span>Queda de engajamento</span>
+                        <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.desengajamento}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto flex justify-end pt-4">
+                      <button 
+                        onClick={() => setIsAlertsOpen(true)}
+                        className="py-1.5 px-4 bg-white hover:bg-gray-50 text-[#0E1B2B] border border-gray-200 text-xs font-bold rounded-full transition-colors cursor-pointer text-center shadow-sm flex items-center gap-1"
+                      >
+                        Ver alertas <span className="text-sm font-light leading-none">↗</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Right Side: Grey Box with list of alerts */}
-              <div className="bg-[#E5EFEA] rounded-[20px] p-6 w-full sm:w-80 flex flex-col gap-4">
-                <span className="text-sm font-extrabold text-[#0E1B2B]">
-                  Últimos {days} dias
-                </span>
-                
-                <div className="flex flex-col gap-2.5">
-                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
-                    <span>Inatividade prolongada</span>
-                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.inatividade}</span>
-                  </div>
-                  <hr className="border-gray-200/50" />
-                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
-                    <span>Erro em tarefa crítica</span>
-                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.erro_critico}</span>
-                  </div>
-                  <hr className="border-gray-200/50" />
-                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
-                    <span>Suporte sem resolução</span>
-                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.suporte}</span>
-                  </div>
-                  <hr className="border-gray-200/50" />
-                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
-                    <span>Queda de engajamento</span>
-                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.desengajamento}</span>
-                  </div>
-                  <hr className="border-gray-200/50" />
-                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
-                    <span>Eventos</span>
-                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.eventos}</span>
-                  </div>
-                  <hr className="border-gray-200/50" />
-                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
-                    <span>Cursos</span>
-                    <span className="text-[#0E1B2B] font-bold">{data.alerts_summary.cursos}</span>
-                  </div>
+              {/* KPI Cards (Span 2) */}
+              <div className="lg:col-span-2">
+                <div className="grid grid-cols-2 gap-6 h-full">
+                  <StatCard
+                    icon={<AlertTriangle size={22} />}
+                    count={data.stats.risks}
+                    title="Em risco"
+                    colorScheme="red"
+                  />
+                  <StatCard
+                    icon={<Eye size={22} />}
+                    count={data.stats.attention}
+                    title="Em atenção"
+                    colorScheme="yellow"
+                  />
+                  <StatCard
+                    icon={<ShieldCheck size={22} />}
+                    count={data.stats.healthy}
+                    title="Saudáveis"
+                    colorScheme="green"
+                  />
+                  <StatCard
+                    icon={<Info size={22} />}
+                    count={data.stats.risks + data.stats.attention + data.stats.healthy}
+                    title="Clientes totais"
+                    colorScheme="grey"
+                  />
                 </div>
-
-                <button 
-                  onClick={() => setIsAlertsOpen(true)}
-                  className="w-full py-2.5 mt-2 bg-[#0E1B2B] hover:bg-[#152a42] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer text-center"
-                >
-                  Ver alertas →
-                </button>
               </div>
-
             </div>
 
-            {/* Chart Widget */}
-            <div className="h-72">
-              <ChartWidget data={data.chart} />
+            {/* Bottom Row of Left Area: Chart */}
+            <div className="bg-[#F4FBFA] rounded-[24px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-gray-100 flex-1 flex flex-col">
+              <div className="mb-4">
+                <h3 className="text-lg font-extrabold text-[#0E1B2B] flex items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0E1B2B]"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                  Variação média do CHS
+                </h3>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Últimos {days} dias</p>
+              </div>
+              <div className="flex-1 min-h-[200px]">
+                <ChartWidget data={data.chart} />
+              </div>
             </div>
 
           </div>
 
-          {/* Right Column (Span 4) */}
-          <div className="lg:col-span-4">
+          {/* Right Area (Span 4) - Priority Queue */}
+          <div className="xl:col-span-4">
             <PriorityQueue users={data.queue} />
           </div>
 
         </div>
-
       </div>
       <ActiveAlertsModal isOpen={isAlertsOpen} onClose={() => setIsAlertsOpen(false)} />
     </MainLayout>
