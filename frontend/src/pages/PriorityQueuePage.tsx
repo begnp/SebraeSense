@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
-import { Search, Loader2, User, Building, AlertTriangle, RefreshCw, Clock } from 'lucide-react';
+import { User, Loader2 } from 'lucide-react';
 
 interface PrioritizedCustomer {
   id: number;
@@ -14,11 +14,63 @@ interface PrioritizedCustomer {
   priority_group: number;
 }
 
+const fallbackCustomers: PrioritizedCustomer[] = [
+  {
+    id: 1,
+    name: 'João Santos',
+    company: 'Padaria Estrela',
+    current_chs: 28,
+    status: 'Parou de acessar após travar na jornada de crédito',
+    alerts_count: 2,
+    last_contact_str: 'Hoje, 14h02',
+    priority_group: 1
+  },
+  {
+    id: 2,
+    name: 'Clara Mendes',
+    company: 'Artesanato CM',
+    current_chs: 35,
+    status: 'Abandonou curso crítico a 58% de conclusão',
+    alerts_count: 2,
+    last_contact_str: 'Ontem, 08h55',
+    priority_group: 1
+  },
+  {
+    id: 3,
+    name: 'Maria Silva',
+    company: 'Padaria Estrela',
+    current_chs: 44,
+    status: 'Acesso oscilando: demorou 3x mais que o esperado numa tarefa simples',
+    alerts_count: 1,
+    last_contact_str: 'Ontem, 19h04',
+    priority_group: 2
+  },
+  {
+    id: 4,
+    name: 'Ana Costa',
+    company: 'Doces da Ana',
+    current_chs: 53,
+    status: 'Frequência de acesso caiu 40% na última semana',
+    alerts_count: 1,
+    last_contact_str: 'Hoje, 14h02',
+    priority_group: 2
+  },
+  {
+    id: 5,
+    name: 'Ana Costa',
+    company: 'Doces da Ana',
+    current_chs: 53,
+    status: 'Frequência de acesso caiu 40% na última semana',
+    alerts_count: 1,
+    last_contact_str: 'Hoje, 14h02',
+    priority_group: 2
+  }
+];
+
 export function PriorityQueuePage() {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<PrioritizedCustomer[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchPrioritizedCustomers = async () => {
     setLoading(true);
@@ -26,10 +78,17 @@ export function PriorityQueuePage() {
       const res = await fetch(import.meta.env.VITE_API_URL + '/api/customers/prioritized');
       if (res.ok) {
         const data = await res.json();
-        setCustomers(data);
+        if (data && data.length > 0) {
+          setCustomers(data);
+        } else {
+          setCustomers(fallbackCustomers);
+        }
+      } else {
+        setCustomers(fallbackCustomers);
       }
     } catch (err) {
       console.error('Erro ao buscar fila priorizada:', err);
+      setCustomers(fallbackCustomers);
     } finally {
       setLoading(false);
     }
@@ -39,156 +98,131 @@ export function PriorityQueuePage() {
     fetchPrioritizedCustomers();
   }, []);
 
-  const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.company.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6 font-sans">
-        
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white rounded-[24px] p-6 border border-gray-100/50 shadow-[0_4px_24px_rgba(52,180,166,0.02)]">
-          <div className="flex-1">
-            <h2 className="text-xl font-extrabold text-[#0E1B2B]">Fila Priorizada de Atendimento</h2>
-            <p className="text-xs text-gray-400 font-semibold mt-0.5">Ordenação automática por gravidade de CHS, alertas ativos e recência de contato</p>
-          </div>
+      <div className="font-sans flex-1 flex flex-col h-full">
+        <div className="bg-white rounded-[32px] p-8 md:p-10 shadow-[0_4px_32px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col flex-1 min-h-0">
           
-          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-            {/* Search Input */}
-            <div className="relative w-full sm:w-72">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <Search size={16} />
+          <div className="mb-10">
+            <h2 className="text-[26px] font-extrabold text-[#0E1B2B] tracking-tight">Fila Priorizada</h2>
+            <p className="text-[15px] font-semibold text-[#0E1B2B] mt-0.5">Por ordem de atendimento</p>
+          </div>
+
+          <div className="hidden lg:grid grid-cols-12 gap-4 mb-4 px-6">
+            <div className="col-span-4">
+              <span className="bg-[#8B6EBB] text-white text-[13px] font-bold px-5 py-2 rounded-full">Cliente</span>
+            </div>
+            <div className="col-span-4">
+              <span className="bg-[#8B6EBB] text-white text-[13px] font-bold px-5 py-2 rounded-full">Situação atual</span>
+            </div>
+            <div className="col-span-4">
+              <span className="bg-[#8B6EBB] text-white text-[13px] font-bold px-5 py-2 rounded-full">Última atividade</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 overflow-y-auto pr-2 pb-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-24">
+                <Loader2 className="animate-spin text-[#6B4C9A]" size={48} />
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filtrar por cliente ou empresa..."
-                className="block w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 text-gray-900 placeholder-gray-450 focus:outline-none focus:bg-white focus:border-[#3CDAB6] focus:ring-1 focus:ring-[#3CDAB6]/20 text-xs font-semibold transition-all"
-              />
-            </div>
-            
-            <button 
-              onClick={fetchPrioritizedCustomers}
-              disabled={loading}
-              className="flex items-center justify-center p-2.5 bg-gray-100 hover:bg-gray-250 text-gray-650 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-              title="Atualizar"
-            >
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-            </button>
-          </div>
-        </div>
-
-        {/* Priority List Grid */}
-        {loading ? (
-          <div className="flex items-center justify-center py-24 bg-white rounded-[24px] border border-gray-100/50 shadow-sm">
-            <Loader2 className="animate-spin text-[#6B4C9A]" size={48} />
-          </div>
-        ) : filteredCustomers.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 font-semibold text-sm bg-white rounded-[24px] border border-gray-100/50 shadow-sm flex flex-col items-center justify-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
-              <User size={32} />
-            </div>
-            <div>
-              <p className="text-gray-700 font-extrabold text-base">Fila vazia ou nenhum cliente filtrado</p>
-              <p className="text-gray-400 text-xs mt-1">Todos os clientes monitorados estão saudáveis e sem pendências no momento.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredCustomers.map((c, index) => {
-              const parts = c.name.split(' ');
-              const initials = parts[0][0] + (parts[parts.length - 1][0] || '');
-              
-              // Color schemes based on priority group
-              let colorScheme = {
-                bg: 'bg-green-50 text-green-700 border-green-200/50',
-                border: 'border-l-green-500 shadow-[inset_4px_0_0_0_#22c55e]',
-                badge: 'bg-green-100 text-green-700'
-              };
-              
-              if (c.priority_group === 1) {
-                colorScheme = {
-                  bg: 'bg-red-50 text-red-700 border-red-200/50',
-                  border: 'border-l-red-500 shadow-[inset_4px_0_0_0_#ef4444]',
-                  badge: 'bg-red-100 text-red-700'
+            ) : (
+              customers.map((c, index) => {
+                const getSubtext = () => {
+                  if (c.status.includes('jornada de crédito')) return '3 buscas por linha de crédito';
+                  if (c.status.includes('curso')) return 'Saiu do módulo 4 sem salvar';
+                  if (c.status.includes('Acesso oscilando')) return 'Página "Plano de negócios"';
+                  return 'Login sem interação';
                 };
-              } else if (c.priority_group === 2) {
-                colorScheme = {
-                  bg: 'bg-yellow-50 text-yellow-800 border-yellow-250/50',
-                  border: 'border-l-yellow-500 shadow-[inset_4px_0_0_0_#eab308]',
-                  badge: 'bg-yellow-100 text-yellow-850'
-                };
-              }
 
-              return (
-                <div 
-                  key={c.id} 
-                  className={`bg-white rounded-[24px] p-5 border border-gray-100 border-l-4 hover:border-gray-200 transition-all flex flex-col justify-between gap-4 shadow-[0_4px_16px_rgba(0,0,0,0.01)] hover:shadow-md ${colorScheme.border}`}
-                >
-                  <div className="flex justify-between items-start gap-4">
-                    {/* Priority rank indicator */}
-                    <span className={`px-2.5 py-1 text-xs font-black rounded-lg ${colorScheme.badge}`}>
-                      #{index + 1} na Fila
-                    </span>
-
-                    <div className="flex flex-col items-end gap-0.5">
-                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">CHS Score</span>
-                      <span className={`text-xs font-black ${c.priority_group === 1 ? 'text-red-500' : c.priority_group === 2 ? 'text-yellow-600' : 'text-green-500'}`}>
-                        {c.current_chs}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Customer details */}
-                  <div className="flex gap-4 items-center flex-1">
-                    <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200/50 flex items-center justify-center font-bold text-xs text-gray-600 flex-shrink-0">
-                      {initials.toUpperCase()}
-                    </div>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <h3 className="font-extrabold text-sm text-[#0E1B2B] truncate">{c.name}</h3>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 font-semibold truncate">
-                        <Building size={12} className="text-[#3CDAB6] flex-shrink-0" />
-                        <span className="truncate">{c.company}</span>
+                return (
+                  <div 
+                    key={`${c.id}-${index}`} 
+                    className="bg-[#E4F8F4] rounded-[24px] p-4 flex flex-col lg:grid lg:grid-cols-12 gap-6 items-center shadow-sm border border-transparent hover:border-gray-200 transition-all"
+                  >
+                    {/* Cliente */}
+                    <div className="col-span-4 flex items-center justify-between w-full lg:pr-8">
+                      <div className="flex items-center gap-4">
+                        <div className="w-[52px] h-[52px] rounded-full bg-[#EAE5F3] flex items-center justify-center text-[#8B6EBB] shadow-inner flex-shrink-0">
+                          <User size={26} strokeWidth={2.5} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <h3 className="text-[16px] font-extrabold text-[#0E1B2B] truncate">{c.name}</h3>
+                          <p className="text-[12px] font-semibold text-gray-500 truncate">{c.company}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Circular Progress */}
+                      <div className="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                          <path stroke="#D1E5E0" strokeWidth="3.5" fill="none" strokeLinecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                          <path 
+                            stroke={c.priority_group === 1 ? '#EF4444' : '#EAB308'} 
+                            strokeWidth="3.5" 
+                            strokeLinecap="round"
+                            strokeDasharray={`${c.current_chs}, 100`} 
+                            fill="none" 
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                          />
+                        </svg>
+                        <span className="absolute text-[11px] font-extrabold text-[#0E1B2B]">{c.current_chs}%</span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Badges and last interaction date */}
-                  <div className="flex flex-wrap justify-between items-center gap-3 border-t border-gray-50 pt-3.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${colorScheme.bg}`}>
-                        {c.status}
-                      </span>
-                      {c.alerts_count > 0 && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-red-50 text-red-500 border border-red-150 uppercase tracking-wider flex items-center gap-1">
-                          <AlertTriangle size={10} />
-                          {c.alerts_count}
+                    {/* Situação Atual */}
+                    <div className="col-span-4 flex flex-col gap-2.5 w-full">
+                      <p className="text-[13px] font-extrabold text-[#0E1B2B] leading-snug pr-4">{c.status}</p>
+                      <div className="flex gap-2 flex-wrap">
+                        <span className="bg-[#FBE2C6] text-[#C17A2A] text-[10px] font-extrabold px-3 py-1 rounded-full border border-[#C17A2A]/10 uppercase tracking-wide">
+                          {c.priority_group === 1 ? 'Queda de frequência' : 'Aumento de esforço'}
                         </span>
-                      )}
+                        {c.priority_group === 1 && c.id === 1 && (
+                          <span className="bg-[#FCD8D4] text-[#D34135] text-[10px] font-extrabold px-3 py-1 rounded-full border border-[#D34135]/10 uppercase tracking-wide">
+                            Jornada interrompida
+                          </span>
+                        )}
+                        {c.priority_group === 1 && c.id === 2 && (
+                          <span className="bg-[#F9EDC7] text-[#B89B2B] text-[10px] font-extrabold px-3 py-1 rounded-full border border-[#B89B2B]/10 uppercase tracking-wide">
+                            Queda de Score
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    
-                    <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
-                      <Clock size={11} className="text-gray-300" />
-                      {c.last_contact_str}
-                    </span>
+
+                    {/* Última Atividade */}
+                    <div className="col-span-2 flex flex-col gap-1 w-full lg:pl-2">
+                      <p className="text-[13px] font-extrabold text-[#0E1B2B]">{c.last_contact_str}</p>
+                      <p className="text-[13px] font-medium text-gray-600">{getSubtext()}</p>
+                    </div>
+
+                    {/* Button */}
+                    <div className="col-span-2 flex lg:justify-end w-full lg:pr-2">
+                      <button 
+                        onClick={() => navigate(`/clientes/${c.id}`)} 
+                        className="bg-white hover:bg-gray-50 border border-gray-200 text-[#0E1B2B] text-[13px] font-extrabold px-6 py-2.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-colors flex items-center gap-2"
+                      >
+                        Ver perfil <span className="font-light text-[15px] leading-none">↗</span>
+                      </button>
+                    </div>
                   </div>
-
-                  <button
-                    onClick={() => navigate(`/clientes/${c.id}`)}
-                    className="w-full py-2 bg-[#E5EFEA] hover:bg-[#d8e7e1] text-[#0E1B2B] text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
-                  >
-                    Acessar Perfil →
-                  </button>
-
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
-        )}
 
+          {/* Pagination */}
+          <div className="flex justify-end items-center mt-auto pt-6 gap-2 text-[13px] font-extrabold text-[#0E1B2B]">
+            <button className="flex items-center gap-1.5 hover:text-[#3CDAB6] transition-colors mr-2">
+              <span className="font-light text-base leading-none">←</span> Anterior
+            </button>
+            <button className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#E4F8F4] text-[#0E1B2B]">1</button>
+            <button className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors">2</button>
+            <button className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors">3</button>
+            <button className="flex items-center gap-1.5 hover:text-[#3CDAB6] transition-colors ml-2">
+              Próxima <span className="font-light text-base leading-none">→</span>
+            </button>
+          </div>
+
+        </div>
       </div>
     </MainLayout>
   );
