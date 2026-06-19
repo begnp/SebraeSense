@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import {
-  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2, Loader2, Star, X
+  ArrowLeft, Phone, Mail, AlertTriangle, Eye, CheckCircle2, Loader2, User, X
 } from 'lucide-react';
 
 interface ScoreItem { value: number; max: number; color: 'yellow' | 'red' | 'green'; }
@@ -131,25 +131,24 @@ function GaugeChart({ value }: { value: number }) {
   );
 }
 
-// Progress Bar Helper
 function ScoreBar({ label, value, color }: { label: string; value: number; color: 'yellow' | 'red' | 'green' }) {
   const colorClasses = {
-    yellow: 'bg-yellow-400',
-    red: 'bg-red-500',
-    green: 'bg-green-500'
+    yellow: 'bg-[#FBE2C6]',
+    red: 'bg-[#FCD8D4]',
+    green: 'bg-[#8EF2AD]'
   };
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-bold text-[#0E1B2B]">{label}</span>
+    <div className="flex flex-col gap-2">
+      <span className="text-[12px] font-extrabold text-[#0E1B2B]">{label}</span>
       <div className="flex items-center gap-3">
-        <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+        <div className="flex-1 bg-[#E4F8F4] rounded-full h-4 overflow-hidden shadow-inner">
           <div 
-            className={`h-full ${colorClasses[color]} rounded-full transition-all duration-500`} 
+            className={`h-full ${colorClasses[color]} rounded-full transition-all duration-500 shadow-sm`} 
             style={{ width: `${value}%` }} 
           />
         </div>
-        <span className="text-xs font-bold text-gray-400 w-8 text-right">{value}%</span>
+        <span className="text-[11px] font-extrabold text-gray-600 w-8 text-right">{value}%</span>
       </div>
     </div>
   );
@@ -265,27 +264,6 @@ export function CustomerProfile() {
     fetchCustomer();
   }, [id]);
 
-  const handleResolveAlert = async (alertId: number, status: 'resolved' | 'false_positive') => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/customers/alerts/${alertId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status })
-      });
-      if (!response.ok) {
-        throw new Error('Falha ao atualizar o alerta');
-      }
-      const profileRes = await fetch(`${import.meta.env.VITE_API_URL}/api/customers/${id ?? 1}`);
-      if (profileRes.ok) {
-        const updatedCustomer = await profileRes.json();
-        setCustomer(updatedCustomer);
-      }
-    } catch (err: any) {
-      console.error('Erro ao atualizar alerta:', err);
-    }
-  };
 
   if (loading) {
     return (
@@ -319,20 +297,20 @@ export function CustomerProfile() {
     switch (type) {
       case 'alert':
         return (
-          <div className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center flex-shrink-0">
-            <AlertTriangle size={18} />
+          <div className="w-[42px] h-[42px] rounded-full bg-[#FCD8D4] text-[#D34135] flex items-center justify-center flex-shrink-0 border border-[#D34135]/10 shadow-sm">
+            <AlertTriangle size={20} />
           </div>
         );
       case 'eye':
         return (
-          <div className="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center flex-shrink-0">
-            <Eye size={18} />
+          <div className="w-[42px] h-[42px] rounded-full bg-[#FBE2C6] text-[#C17A2A] flex items-center justify-center flex-shrink-0 border border-[#C17A2A]/10 shadow-sm">
+            <Eye size={20} />
           </div>
         );
       case 'check':
         return (
-          <div className="w-10 h-10 rounded-full bg-green-100 text-green-500 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 size={18} />
+          <div className="w-[42px] h-[42px] rounded-full bg-[#8EF2AD] text-[#1E4A38] flex items-center justify-center flex-shrink-0 border border-[#1E4A38]/10 shadow-sm">
+            <CheckCircle2 size={20} />
           </div>
         );
     }
@@ -340,8 +318,8 @@ export function CustomerProfile() {
 
   const getDotColorClass = (status: 'green' | 'yellow' | 'gray') => {
     switch (status) {
-      case 'green': return 'bg-green-500';
-      case 'yellow': return 'bg-yellow-400';
+      case 'green': return 'bg-[#3CDAB6]';
+      case 'yellow': return 'bg-[#FEF08A]';
       case 'gray': return 'bg-gray-300';
     }
   };
@@ -358,302 +336,187 @@ export function CustomerProfile() {
           <ArrowLeft size={16} /> Voltar
         </button>
 
-        {/* Top Profile Card */}
-        <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
-            {/* Avatar container with purple border */}
-            <div className="w-20 h-20 rounded-full border-4 border-purple-500/30 p-1 flex-shrink-0 flex items-center justify-center bg-gray-100">
-              <div className="w-full h-full rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+        {/* Main Layout Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
+          
+          {/* Left Side: Profile Card + Bottom Cards */}
+          <div className="lg:col-span-8 flex flex-col gap-6 h-full">
+
+            {/* Top Profile Card */}
+            <div className="bg-[#F4FBFA] rounded-[32px] p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col md:flex-row items-center gap-8 relative">
+              {/* Avatar */}
+              <div className="w-[100px] h-[100px] rounded-full border-[6px] border-[#8B6EBB]/40 p-1 flex-shrink-0 flex items-center justify-center bg-gray-50">
+                <div className="w-full h-full rounded-full bg-[#EAE5F3] text-[#8B6EBB] flex items-center justify-center shadow-inner">
+                  <User size={40} strokeWidth={2.5} />
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-5 w-full">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <h2 className="text-[28px] font-extrabold text-[#0E1B2B] leading-none tracking-tight">{customer.name}</h2>
+                    <span className="text-[15px] font-semibold text-gray-600">{customer.company}</span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2.5 text-[13px] font-semibold text-gray-500 mr-auto sm:ml-12">
+                    <span className="flex items-center gap-2.5">
+                      <Phone size={16} className="text-[#3CDAB6]" /> {customer.phone}
+                    </span>
+                    <span className="flex items-center gap-2.5">
+                      <Mail size={16} className="text-[#3CDAB6]" /> {customer.email}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Status Bar */}
+                <div className="flex bg-[#F9F6EA] rounded-full w-full max-w-lg items-center text-[13px] font-extrabold h-9 relative overflow-hidden shadow-inner mt-2">
+                   <div className="absolute left-0 top-0 bottom-0 bg-[#FBE2C6] w-[50%] rounded-full flex items-center pl-5 text-[#C17A2A]">
+                      <Eye size={18} />
+                   </div>
+                   <div className="absolute right-6 top-0 bottom-0 flex items-center text-[#0E1B2B]">
+                     {customer.status}
+                   </div>
+                </div>
               </div>
             </div>
+
+            {/* Bottom Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch flex-1">
+          
+          {/* Linha do tempo Card */}
+          <div className="bg-[#F4FBFA] rounded-[32px] p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col h-full">
+            <h3 className="text-[22px] font-extrabold text-[#0E1B2B] tracking-tight mb-8">Linha do tempo</h3>
             
-            <div className="flex flex-col gap-1">
-              <h2 className="text-2xl font-extrabold text-[#0E1B2B] leading-none">{customer.name}</h2>
-              <span className="text-sm font-semibold text-gray-400 mt-1">{customer.company}</span>
-              
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mt-2 text-xs font-semibold text-gray-400">
-                <span className="flex items-center gap-1.5">
-                  <Phone size={14} className="text-[#3CDAB6]" /> {customer.phone}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Mail size={14} className="text-[#3CDAB6]" /> {customer.email}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Eye Icon Double Status Pill */}
-          <div className="flex items-center rounded-full overflow-hidden border border-yellow-200 shadow-sm flex-shrink-0">
-            <div className="bg-[#FEF08A] text-[#854D0E] px-4 py-2 flex items-center justify-center">
-              <Eye size={16} />
-            </div>
-            <div className="bg-[#FEF08A]/60 text-[#854D0E] px-5 py-2 font-extrabold text-xs uppercase tracking-wide">
-              {customer.status}
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Grid (Left Col-span 8, Right Col-span 4) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                   {/* Left Column components (Timeline, Processes & Feedbacks) */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Linha do tempo Card */}
-              <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col h-full">
-                <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Linha do tempo</h3>
-                
-                <div className="flex-1 flex flex-col gap-5 relative pl-6 border-l-2 border-dashed border-[#3CDAB6]/40 ml-2 py-1">
-                  {customer.timeline.map((event, idx) => (
-                    <div key={idx} className="relative flex items-center">
-                      {/* Circle bullet on the dashed line */}
-                      <div className="absolute -left-[31px] w-4 h-4 rounded-full bg-[#3CDAB6] border-2 border-white ring-2 ring-[#3CDAB6]/20 flex-shrink-0" />
-                      
-                      {/* Event Bubble */}
-                      <div className="bg-[#E5EFEA] rounded-[16px] p-4 flex-1 flex items-center justify-between gap-4 border border-gray-100/20">
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="text-xs font-bold text-[#0E1B2B] leading-tight break-words">
-                            {event.title}
-                          </span>
-                          <span className="text-[10px] font-semibold text-gray-400 mt-1">
-                            {event.time}
-                          </span>
-                          {event.alert_id && (
-                            <div className="mt-2.5 flex flex-wrap gap-2">
-                              {event.status === 'active' ? (
-                                <>
-                                  <button
-                                    onClick={() => handleResolveAlert(event.alert_id!, 'resolved')}
-                                    className="px-2.5 py-1 bg-[#3CDAB6] hover:bg-[#2cb898] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
-                                  >
-                                    ✓ Resolvido
-                                  </button>
-                                  <button
-                                    onClick={() => handleResolveAlert(event.alert_id!, 'false_positive')}
-                                    className="px-2.5 py-1 bg-gray-500 hover:bg-gray-600 text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
-                                  >
-                                    ✗ Falso Positivo
-                                  </button>
-                                </>
-                              ) : event.status === 'resolved' ? (
-                                <span className="px-2.5 py-0.5 bg-[#E5EFEA] text-[#0E1B2B] text-[10px] font-extrabold rounded-full border border-green-200 uppercase tracking-wider">
-                                  ✓ Resolvido
-                                </span>
-                              ) : (
-                                <span className="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-extrabold rounded-full border border-gray-200 uppercase tracking-wider">
-                                  ✗ Falso Positivo
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        {getTimelineIcon(event.type)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button className="mt-6 py-2.5 w-full border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center">
-                  Ver mais +
-                </button>
-              </div>
-
-              <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col h-full">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-extrabold text-[#0E1B2B]">Processos abertos</h3>
-                  <button 
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="px-2.5 py-1.5 bg-[#0E1B2B] hover:bg-[#1c3552] text-white text-[10px] font-black rounded-lg transition-colors cursor-pointer"
-                  >
-                    + Novo Caso
-                  </button>
-                </div>
-                
-                <div className="flex flex-col gap-5 flex-1">
-                  {customer.processes.map((proc, idx) => (
-                    <div key={idx} className="border border-gray-100 rounded-[20px] overflow-hidden flex flex-col shadow-sm bg-white">
-                      {/* Top Tag Bar */}
-                      <div className="bg-[#3CDAB6] px-4 py-1.5 flex justify-between items-center text-[10px] font-bold text-white">
-                        <span>{proc.period}</span>
-                        <span>{proc.id}</span>
-                      </div>
-                      {/* Card Body */}
-                      <div className="p-4 flex flex-col gap-4">
-                        <div className="flex justify-between items-start gap-4">
-                          <span className="text-xs font-extrabold text-[#0E1B2B] leading-tight pr-2">
-                            {proc.title}
-                          </span>
-                          
-                          {/* Dot Status Indicators */}
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {proc.dots.map((dot, dIdx) => (
-                              <div 
-                                key={dIdx} 
-                                className={`w-2.5 h-2.5 rounded-full ${getDotColorClass(dot)}`} 
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* SLA Status Badge */}
-                        <div className="flex items-center justify-between border-t border-gray-50 pt-2 flex-wrap gap-2">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${
-                            proc.sla_status === 'atrasado'
-                              ? 'bg-red-50 text-red-500 border-red-100'
-                              : proc.sla_status === 'atencao'
-                              ? 'bg-yellow-50 text-yellow-700 border-yellow-100'
-                              : proc.sla_status === 'finalizado'
-                              ? 'bg-gray-100 text-gray-500 border-gray-200'
-                              : 'bg-green-50 text-green-600 border-green-100'
-                          }`}>
-                            {proc.sla_status === 'atrasado'
-                              ? 'SLA: Estourado'
-                              : proc.sla_status === 'atencao'
-                              ? 'SLA: Em Atenção'
-                              : proc.sla_status === 'finalizado'
-                              ? 'SLA: Finalizado'
-                              : 'SLA: No Prazo'}
-                          </span>
-                        </div>
-
-                        <button 
-                          onClick={() => {
-                            setSelectedProcess(proc);
-                            setNewStatus(proc.status);
-                            setNewNotes(proc.notes || '');
-                            setIsUpdateModalOpen(true);
-                          }}
-                          className="w-full py-2 bg-[#E5EFEA] hover:bg-[#d8e7e1] text-[#0E1B2B] text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          Atualizar caso <span className="text-sm">↗</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button className="mt-6 py-2.5 w-full border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center">
-                  Ver mais +
-                </button>
-              </div>
-
-            </div>
-
-            {/* Feedbacks do Cliente Card */}
-            <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col">
-              <h3 className="text-lg font-extrabold text-[#0E1B2B] mb-6">Feedbacks do Cliente</h3>
-              
-              {customer.feedbacks.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 font-semibold text-xs bg-gray-50 rounded-2xl border border-gray-100">
-                  Nenhum feedback registrado para este cliente.
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4 max-h-[350px] overflow-y-auto pr-1">
-                  {customer.feedbacks.map((fb) => (
-                    <div key={fb.id} className="bg-[#F4F7FA] rounded-[20px] p-4 border border-gray-100/50 flex flex-col gap-2 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="flex justify-between items-center flex-wrap gap-2">
-                        <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <Star
-                              key={s}
-                              size={12}
-                              className={
-                                s <= (fb.rating || 0)
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300'
-                              }
-                            />
-                          ))}
-                        </div>
-                        
-                        <span className={`px-2.5 py-0.5 text-[8px] font-extrabold rounded-full uppercase tracking-wider border ${
-                          fb.sentiment === 'positive'
-                            ? 'bg-green-50 text-green-600 border-green-200'
-                            : fb.sentiment === 'negative'
-                            ? 'bg-red-50 text-red-500 border-red-200'
-                            : 'bg-gray-100 text-gray-500 border-gray-200'
-                        }`}>
-                          {fb.sentiment === 'positive'
-                            ? 'POSITIVO'
-                            : fb.sentiment === 'negative'
-                            ? 'NEGATIVO'
-                            : 'NEUTRO'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-700 leading-relaxed font-semibold">"{fb.comment}"</p>
-                      <span className="text-[10px] text-gray-400 font-semibold mt-1">
-                        Registrado em {new Date(fb.created_at).toLocaleDateString('pt-BR')}
+            <div className="flex-1 flex flex-col gap-6 relative pl-7 border-l-[3px] border-[#3CDAB6] ml-2 py-2">
+              {customer.timeline.map((event, idx) => (
+                <div key={idx} className="relative flex items-center">
+                  {/* Circle bullet on the line */}
+                  <div className="absolute -left-[37px] w-5 h-5 rounded-full bg-[#3CDAB6] border-[3px] border-white ring-2 ring-[#3CDAB6]/30 flex-shrink-0" />
+                  
+                  {/* Event Bubble */}
+                  <div className="bg-[#E4F8F4] rounded-[24px] p-5 flex-1 flex flex-row items-center justify-between gap-4 shadow-sm border border-transparent hover:border-gray-200 transition-all ml-4">
+                    <div className="flex flex-col min-w-0 flex-1 gap-1">
+                      <span className="text-[13px] font-extrabold text-[#0E1B2B] leading-tight break-words pr-2">
+                        {event.title}
                       </span>
-
-                      {/* Visual response or response form */}
-                      {fb.response ? (
-                        <div className="mt-3 ml-2 p-3 bg-white border-l-4 border-purple-500 rounded-r-2xl flex flex-col gap-1.5 shadow-sm">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider">Resposta Sebrae</span>
-                            <span className="text-[9px] text-gray-400 font-bold">
-                              {fb.responded_at ? new Date(fb.responded_at).toLocaleDateString('pt-BR') : ''}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-600 leading-relaxed font-medium">{fb.response}</p>
-                        </div>
-                      ) : (
-                        <FeedbackReplyForm feedbackId={fb.id} onReplied={reloadCustomer} />
-                      )}
+                      <span className="text-[11px] font-semibold text-gray-500">
+                        {event.time}
+                      </span>
                     </div>
-                  ))}
+                    {getTimelineIcon(event.type)}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
 
+            <div className="mt-8 flex justify-center">
+              <button className="py-2 px-5 bg-transparent border border-gray-300 hover:bg-gray-50 text-gray-600 text-[11px] font-extrabold uppercase tracking-wide rounded-full transition-colors cursor-pointer text-center">
+                Ver mais +
+              </button>
+            </div>
           </div>
 
-          {/* Right Column (Score Calculado panel) */}
-          <div className="lg:col-span-4 bg-white rounded-[24px] p-6 shadow-[0_4px_24px_rgba(52,180,166,0.06)] border border-gray-100/50 flex flex-col">
-            <span className="text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-4">
-              Score Calculado
-            </span>
+          {/* Processos abertos Card */}
+          <div className="bg-[#F4FBFA] rounded-[32px] p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col h-full">
+            <h3 className="text-[22px] font-extrabold text-[#0E1B2B] tracking-tight mb-8">Processos abertos</h3>
             
-            {/* Speedometer Gauge Component */}
-            <div className="mb-6">
-              <GaugeChart value={customer.score} />
-              <div className="text-center text-[10px] font-semibold text-gray-400 mt-4">
-                Última atualização: 01 de junho 2026
+            <div className="flex flex-col gap-6 flex-1">
+              {customer.processes.map((proc, idx) => (
+                <div key={idx} className="bg-[#E4F8F4] rounded-[24px] overflow-hidden flex flex-col shadow-sm border border-transparent hover:border-gray-200 transition-all">
+                  {/* Top Tag Bar */}
+                  <div className="bg-[#3CDAB6] px-5 py-2 flex justify-between items-center text-[11px] font-extrabold text-white uppercase tracking-wider">
+                    <span>{proc.period}</span>
+                    <span>{proc.id}</span>
+                  </div>
+                  {/* Card Body */}
+                  <div className="p-5 flex flex-col gap-4">
+                    <div className="flex justify-between items-start gap-4">
+                      <span className="text-[14px] font-extrabold text-[#0E1B2B] leading-snug pr-2">
+                        {proc.title}
+                      </span>
+                      
+                      {/* Dot Status Indicators */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0 mt-1">
+                        {proc.dots.map((dot, dIdx) => (
+                          <div 
+                            key={dIdx} 
+                            className={`w-3 h-3 rounded-full ${getDotColorClass(dot)} shadow-sm`} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        setSelectedProcess(proc);
+                        setNewStatus(proc.status);
+                        setNewNotes(proc.notes || '');
+                        setIsUpdateModalOpen(true);
+                      }}
+                      className="mt-2 w-full py-2.5 bg-white hover:bg-gray-50 text-[#0E1B2B] text-[12px] font-extrabold rounded-full border border-gray-200 transition-colors flex items-center justify-between px-5 shadow-sm cursor-pointer"
+                    >
+                      Atualizar caso <span className="text-sm font-light leading-none">↗</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex justify-center">
+              <button className="py-2 px-5 bg-transparent border border-gray-300 hover:bg-gray-50 text-gray-600 text-[11px] font-extrabold uppercase tracking-wide rounded-full transition-colors cursor-pointer text-center">
+                Ver mais +
+              </button>
+            </div>
+          </div>
+
+            </div>
+          </div>
+
+          {/* Right Side: Score Calculado */}
+          <div className="lg:col-span-4 flex flex-col h-full">
+            {/* Score Calculado Card */}
+            <div className="bg-[#F4FBFA] rounded-[32px] p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col h-full">
+              <h3 className="text-[22px] font-extrabold text-[#0E1B2B] tracking-tight mb-8">Score Calculado</h3>
+              
+              {/* Speedometer Gauge Component */}
+              <div className="mb-8">
+                <GaugeChart value={customer.score} />
+                <div className="text-center text-[10px] font-semibold text-gray-500 mt-6">
+                  Última atualização: 01 de junho 2026
+                </div>
               </div>
-            </div>
 
-            {/* Score Indicators List */}
-            <div className="flex flex-col gap-4 border-t border-gray-100 pt-6">
-              <ScoreBar 
-                label="Frequência de acesso" 
-                value={customer.scores.frequencia.value} 
-                color={customer.scores.frequencia.color} 
-              />
-              <ScoreBar 
-                label="Progressão" 
-                value={customer.scores.progressao.value} 
-                color={customer.scores.progressao.color} 
-              />
-              <ScoreBar 
-                label="Retorno" 
-                value={customer.scores.retorno.value} 
-                color={customer.scores.retorno.color} 
-              />
-              <ScoreBar 
-                label="Engajamento" 
-                value={customer.scores.engajamento.value} 
-                color={customer.scores.engajamento.color} 
-              />
-            </div>
+              {/* Score Indicators List */}
+              <div className="flex flex-col gap-6 pt-4">
+                <ScoreBar 
+                  label="Frequência de acesso" 
+                  value={customer.scores.frequencia.value} 
+                  color={customer.scores.frequencia.color} 
+                />
+                <ScoreBar 
+                  label="Progressão" 
+                  value={customer.scores.progressao.value} 
+                  color={customer.scores.progressao.color} 
+                />
+                <ScoreBar 
+                  label="Retorno" 
+                  value={customer.scores.retorno.value} 
+                  color={customer.scores.retorno.color} 
+                />
+                <ScoreBar 
+                  label="Engajamento" 
+                  value={customer.scores.engajamento.value} 
+                  color={customer.scores.engajamento.color} 
+                />
+              </div>
 
-            {/* Total Indicator footer inside column */}
-            <div className="bg-[#E5EFEA] rounded-[20px] p-4 flex justify-between items-center mt-6">
-              <span className="text-sm font-extrabold text-[#0E1B2B]">Total</span>
-              <div className="flex items-center gap-1.5 bg-[#FEF08A] text-[#854D0E] font-extrabold text-xs px-3 py-1 rounded-full border border-yellow-200">
-                <Eye size={12} />
-                <span>53%</span>
+              {/* Total Indicator */}
+              <div className="bg-[#E4F8F4] rounded-[24px] p-5 flex justify-between items-center mt-auto shadow-sm border border-gray-100/50">
+                <span className="text-[16px] font-extrabold text-[#0E1B2B]">Total</span>
+                <div className="flex items-center gap-2 bg-[#FBE2C6] text-[#C17A2A] font-extrabold text-[14px] px-4 py-1.5 rounded-full border border-[#C17A2A]/10 shadow-sm">
+                  <Eye size={16} />
+                  <span>53%</span>
+                </div>
               </div>
             </div>
           </div>
@@ -837,76 +700,4 @@ export function CustomerProfile() {
     </MainLayout>
   );
 }
-
-function FeedbackReplyForm({ feedbackId, onReplied }: { feedbackId: number; onReplied: () => void }) {
-  const [replyText, setReplyText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!replyText.trim()) return;
-    setSubmitting(true);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/customers/feedback/${feedbackId}/respond`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ response: replyText }),
-      });
-      if (response.ok) {
-        setReplyText('');
-        setShowForm(false);
-        onReplied();
-      } else {
-        alert('Erro ao enviar resposta.');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Erro de rede ao responder feedback.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (!showForm) {
-    return (
-      <button
-        onClick={() => setShowForm(true)}
-        className="mt-2 text-[10.5px] font-bold text-purple-600 hover:text-purple-800 hover:underline w-fit text-left cursor-pointer flex items-center gap-1"
-      >
-        <span>+ Responder feedback</span>
-      </button>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="mt-3.5 flex flex-col gap-2 bg-white p-3.5 rounded-2xl border border-purple-100 shadow-sm">
-      <span className="text-[10px] font-extrabold text-[#0E1B2B] uppercase">Nova Resposta Sebrae</span>
-      <textarea
-        value={replyText}
-        onChange={(e) => setReplyText(e.target.value)}
-        placeholder="Escreva uma resposta direta e objetiva..."
-        rows={2}
-        className="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-500 bg-gray-50/50 text-gray-700 placeholder-gray-400"
-      />
-      <div className="flex gap-2.5 self-end">
-        <button
-          type="button"
-          onClick={() => setShowForm(false)}
-          className="px-3 py-1.5 text-[10px] font-bold text-gray-400 hover:text-gray-650 cursor-pointer"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={submitting || !replyText.trim()}
-          className="px-4 py-1.5 bg-[#0E1B2B] hover:bg-[#152a42] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-        >
-          {submitting ? 'Enviando...' : 'Enviar Resposta'}
-        </button>
-      </div>
-    </form>
-  );
-}
+
