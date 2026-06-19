@@ -161,7 +161,11 @@ npm run dev
 > O Dashboard estará disponível em: `http://localhost:5173`
 
 ---
+## Screencast da plataforma
 
+https://www.youtube.com/watch?v=DPPx-IBPTbs
+
+---
 ## 🤝 Como contribuir
 
 Se você faz parte da equipe de desenvolvimento e vai atuar no SENSE, siga estas diretrizes básicas:
