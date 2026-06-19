@@ -114,73 +114,64 @@ classDiagram
 
 ---
 
-## 🚀 Como iniciar o projeto localmente
+## 🌍 Deploy da Aplicação
 
-Para rodar este projeto em sua máquina local, você precisará ter instalado:
-*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para o banco de dados)
-*   [Node.js](https://nodejs.org/) (versão 18+ para rodar o frontend)
-*   [Python](https://www.python.org/downloads/) (versão 3.9+ para rodar o backend)
+O projeto está hospedado na nuvem (AWS) e pode ser acessado publicamente através do link abaixo:
 
-Siga os passos abaixo na ordem apresentada:
+🔗 **Acesse o SENSE:** [http://sebraesense.duckdns.org](http://sebraesense.duckdns.org)
 
-### 1. Iniciando o Banco de Dados
-Na raiz do projeto, inicie o contêiner do PostgreSQL utilizando o Docker Compose:
-```bash
-docker-compose up -d
-```
-> O banco de dados estará rodando na porta `5432` com usuário `sense_user` e senha `sense_password`.
-
-### 2. Iniciando o Backend (API)
-Abra um terminal e acesse a pasta `backend`.
-Crie um ambiente virtual (recomendado) e instale as dependências:
-```bash
-cd backend
-python -m venv venv
-
-# Ative o ambiente virtual (no Windows):
-venv\Scripts\activate
-# No Linux/Mac: source venv/bin/activate
-
-pip install -r requirements.txt
-```
-Inicie o servidor de desenvolvimento:
-```bash
-uvicorn main:app --reload
-```
-> A API estará disponível em: `http://localhost:8000`
-> O Swagger UI para testar as rotas da API pode ser acessado em: `http://localhost:8000/docs`
-
-### 3. Iniciando o Frontend (Dashboard)
-Abra outro terminal e acesse a pasta `frontend`.
-Instale as dependências Node e inicie o Vite:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-> O Dashboard estará disponível em: `http://localhost:5173`
-
----
-## Screencast da plataforma
+## ▶️ Screencast da plataforma
 
 https://www.youtube.com/watch?v=DPPx-IBPTbs
 
 ---
+
+## 🚀 Como iniciar o projeto localmente
+
+O projeto foi configurado para rodar de forma unificada e simples utilizando contêineres Docker.
+
+Para rodar este projeto em sua máquina local, você precisará apenas ter instalado:
+*   [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/install/)
+
+Siga os passos abaixo:
+
+### 1. Preparando o Ambiente
+Na raiz do projeto (onde está o arquivo `docker-compose.yml`), você pode criar um arquivo `.env` para personalizar senhas, mas caso não crie, o sistema usará credenciais padrão seguras para o ambiente de desenvolvimento local.
+
+### 2. Subindo a Aplicação
+Abra um terminal na raiz do projeto e execute:
+```bash
+docker compose up -d --build
+```
+*Observação: A primeira execução pode levar alguns minutos enquanto o Docker baixa as imagens e compila o Frontend e o Backend.*
+
+### 3. Acessando os Serviços
+Uma vez que os contêineres estejam com o status "Up", você poderá acessar:
+*   **Dashboard (Frontend)**: `http://localhost` (na porta 80)
+*   **API (Backend)**: `http://localhost:8000`
+*   **Documentação da API (Swagger)**: `http://localhost:8000/docs`
+
+> **Nota para desenvolvimento avançado:** Caso queira desenvolver modificando o código em tempo real (Hot Reload), você pode parar os contêineres do frontend e backend (`docker compose stop frontend backend`) e rodá-los manualmente usando Node.js (`npm run dev`) e Python (`uvicorn main:app --reload`), mantendo apenas o banco de dados rodando via Docker (`docker compose start db`).
+
+---
+
 ## 🤝 Como contribuir
 
-Se você faz parte da equipe de desenvolvimento e vai atuar no SENSE, siga estas diretrizes básicas:
+Se você faz parte da equipe de desenvolvimento ou deseja contribuir com o SENSE, siga estas diretrizes:
 
-1. **Branches:** Crie branches a partir da `main` com nomes descritivos. Exemplos:
-   - `feat/novo-dashboard` (para novas funcionalidades)
-   - `fix/calculo-chs` (para correções de bugs)
-   - `refactor/api-rotas` (para refatorações de código)
+1. **Branches:** Nunca comite diretamente na `main`. Crie branches descritivas:
+   - `feat/nome-da-feature` (para novas funcionalidades)
+   - `fix/nome-do-bug` (para correções)
+   - `refactor/nome-da-refatoracao` (para melhorias estruturais)
+   - `docs/nome-da-documentacao` (para atualizações de documentação)
 
-2. **Padrão de Commits:** Procure utilizar mensagens claras e diretas sobre o que foi alterado. Exemplo: `"feat: adicionado gráfico de linha no dashboard"`.
+2. **Padrão de Commits:** Utilizamos o padrão [Conventional Commits](https://www.conventionalcommits.org/). Exemplos:
+   - `feat: adiciona gráfico preditivo no dashboard`
+   - `fix: resolve erro de CORS na rota de autenticação`
+   - `docs: atualiza instruções do Docker no README`
 
-3. **Backend:** Ao adicionar novos pacotes Python, lembre-se de atualizar o `requirements.txt` usando o comando `pip freeze > requirements.txt` (tomando o cuidado de manter as dependências limpas) ou editando manualmente.
+3. **Boas Práticas e Linting:**
+   - **Frontend:** Antes de enviar código, certifique-se de rodar o linter (`npm run lint`) e garanta que o build não quebra (`npm run build`). Mantenha os componentes em `src/components/`.
+   - **Backend:** Atualize o `requirements.txt` se instalar novos pacotes. Crie as variáveis de ambiente necessárias e documente-as no `.env.example` (se aplicável).
 
-4. **Frontend:** Adicione componentes reutilizáveis dentro da pasta `src/components/` e mantenha a organização modular da interface.
-
-## 📄 Documentação Técnica
-
-Para mais detalhes sobre as regras de negócio, cálculo de Customer Health Score e a visão estratégica do produto, consulte o arquivo de documentação [Estrutura_MVP_Sense.md](./Estrutura_MVP_Sense.md) presente neste repositório.
+4. **Pull Requests (PR):** Faça push da sua branch para o repositório remoto e abra um Pull Request detalhando o que foi feito. Solicite revisão de pelo menos um colega da equipe.
