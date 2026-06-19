@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { MainLayout } from '../components/layout/MainLayout';
-import { Loader2, Info, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Loader2, Info, User } from 'lucide-react';
 
 interface ActiveAlert {
   id: number;
@@ -14,25 +14,15 @@ interface ActiveAlert {
 }
 
 export function Alerts() {
-  const navigate = useNavigate();
+
   const [alerts, setAlerts] = useState<ActiveAlert[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
-
-  const categories = [
-    'Todos',
-    'Inatividade prolongada',
-    'Erro em tarefa crítica',
-    'Suporte sem resolução',
-    'Queda de engajamento',
-    'Eventos',
-    'Cursos'
-  ];
+  const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
 
   const fetchActiveAlerts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL + '');
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/customers/alerts/active');
       if (res.ok) {
         const data = await res.json();
         setAlerts(data);
@@ -68,146 +58,116 @@ export function Alerts() {
     }
   };
 
-  const categoryCounts = categories.reduce((acc, cat) => {
-    if (cat === 'Todos') {
-      acc[cat] = alerts.length;
-    } else {
-      acc[cat] = alerts.filter(a => a.category === cat).length;
-    }
-    return acc;
-  }, {} as Record<string, number>);
-
-  const filteredAlerts = selectedCategory === 'Todos'
-    ? alerts
-    : alerts.filter(a => a.category === selectedCategory);
-
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6 font-sans">
+      <div className="flex flex-col font-sans">
         
-        {/* Header section with refresh button */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white rounded-[24px] p-6 border border-gray-100/50 shadow-[0_4px_24px_rgba(52,180,166,0.02)]">
-          <div>
-            <h2 className="text-xl font-extrabold text-[#0E1B2B]">Painel de Alertas Operacionais</h2>
-            <p className="text-xs text-gray-400 font-semibold mt-0.5">Gerenciamento e tratativa de desvios comportamentais em tempo real</p>
-          </div>
+        {/* Header Title & Subtitle */}
+        <div className="mb-6">
+          <h2 className="text-[28px] font-extrabold text-[#0E1B2B] leading-none tracking-tight">Alertas</h2>
+          <p className="text-[15px] font-semibold text-[#0E1B2B] mt-1.5">Alertas proativos de risco</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-4 mb-4 font-extrabold text-sm">
           <button 
-            onClick={fetchActiveAlerts}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+            onClick={() => setActiveTab('ativos')}
+            className={`px-6 py-2 rounded-full cursor-pointer transition-colors ${
+              activeTab === 'ativos' ? 'bg-[#8B6EBB] text-white' : 'text-[#0E1B2B] hover:bg-white/50'
+            }`}
           >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            <span>Atualizar</span>
+            Ativos ({alerts.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('inativos')}
+            className={`px-6 py-2 rounded-full cursor-pointer transition-colors ${
+              activeTab === 'inativos' ? 'bg-[#8B6EBB] text-white' : 'text-[#0E1B2B] hover:bg-white/50'
+            }`}
+          >
+            Inativos (0)
           </button>
         </div>
 
-        {/* Category filtering pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 flex-shrink-0 bg-white/40 p-2.5 rounded-2xl border border-gray-100/40">
-          {categories.map((cat) => {
-            const count = categoryCounts[cat] || 0;
-            const isActive = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer border ${
-                  isActive
-                    ? 'bg-[#0E1B2B] text-white border-[#0E1B2B] shadow-sm'
-                    : 'bg-white text-gray-400 border-gray-200/50 hover:bg-gray-50 hover:text-gray-600'
-                }`}
-              >
-                {cat} 
-                <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isActive 
-                    ? 'bg-white/20 text-white' 
-                    : 'bg-gray-200/60 text-gray-500'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Alerts Grid / List */}
+        {/* Alerts List */}
         {loading ? (
-          <div className="flex items-center justify-center py-24 bg-white rounded-[24px] border border-gray-100/50 shadow-sm">
+          <div className="flex items-center justify-center py-24">
             <Loader2 className="animate-spin text-[#6B4C9A]" size={48} />
           </div>
-        ) : filteredAlerts.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 font-semibold text-sm bg-white rounded-[24px] border border-gray-100/50 shadow-sm flex flex-col items-center justify-center gap-3">
+        ) : alerts.length === 0 && activeTab === 'ativos' ? (
+          <div className="text-center py-20 text-gray-500 font-semibold text-sm bg-white rounded-[24px] border border-gray-100/50 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center gap-3">
             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
               <Info size={32} />
             </div>
             <div>
               <p className="text-gray-700 font-extrabold text-base">Tudo sob controle!</p>
-              <p className="text-gray-400 text-xs mt-1">Nenhum alerta ativo encontrado na categoria selecionada.</p>
+              <p className="text-gray-400 text-xs mt-1">Nenhum alerta ativo encontrado no momento.</p>
             </div>
           </div>
+        ) : activeTab === 'inativos' ? (
+          <div className="text-center py-20 text-gray-500 font-semibold text-sm bg-white rounded-[24px] border border-gray-100/50 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+            Nenhum alerta inativo no momento.
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredAlerts.map((alert) => {
-              const parts = alert.customer_name.split(' ');
-              const initials = parts[0][0] + (parts[parts.length - 1][0] || '');
-              
-              return (
-                <div 
-                  key={alert.id} 
-                  className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-[0_4px_24px_rgba(52,180,166,0.01)] hover:shadow-[0_4px_24px_rgba(52,180,166,0.03)] transition-all flex flex-col justify-between gap-5 relative overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-red-500" />
-                  
-                  <div className="flex gap-4 items-start">
-                    <div className="w-12 h-12 rounded-full bg-[#E5EFEA] text-[#0E1B2B] font-black flex items-center justify-center text-sm shadow-inner flex-shrink-0">
-                      {initials.toUpperCase()}
+          <div className="flex flex-col gap-6">
+            {alerts.map((alert) => (
+              <div 
+                key={alert.id} 
+                className="bg-[#F4FBFA] rounded-[24px] p-6 border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col gap-5"
+              >
+                {/* Top row: Avatar, Name, Risco, Circle, and Buttons */}
+                <div className="flex justify-between items-center flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className="w-[50px] h-[50px] rounded-full bg-[#EAE5F3] text-[#8B6EBB] flex items-center justify-center flex-shrink-0">
+                       <User size={26} strokeWidth={2} />
                     </div>
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-extrabold text-sm text-[#0E1B2B]">{alert.customer_name}</span>
-                        <span className="text-[10px] text-gray-400 font-bold bg-gray-100 px-2.5 py-0.5 rounded-full">{alert.company}</span>
-                      </div>
-                      <span className="text-[9px] font-black uppercase bg-red-50 text-red-500 border border-red-100/50 px-2 py-0.5 rounded w-fit mt-0.5">
-                        {alert.category || 'Queda de engajamento'}
-                      </span>
+                    {/* Name and Company */}
+                    <div className="flex flex-col">
+                      <span className="font-extrabold text-[16px] text-[#0E1B2B] leading-tight">{alert.customer_name}</span>
+                      <span className="text-[11px] font-semibold text-gray-500 mt-0.5">{alert.company}</span>
                     </div>
-                  </div>
-
-                  <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100/30 flex items-start gap-3 flex-1">
-                    <AlertTriangle className="text-red-500 flex-shrink-0 mt-0.5" size={16} />
-                    <p className="text-xs text-gray-650 font-semibold leading-relaxed">{alert.reason}</p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-2 border-t border-gray-50">
-                    <span className="text-[10px] text-gray-400 font-semibold">
-                      {alert.created_at ? new Date(alert.created_at).toLocaleDateString('pt-BR') + ' às ' + new Date(alert.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Recente'}
-                    </span>
-                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                      <button
-                        onClick={() => handleResolveAlert(alert.id, 'resolved')}
-                        className="flex-1 sm:flex-none px-3.5 py-2 bg-[#3CDAB6] hover:bg-[#2cb898] text-white text-[11px] font-black rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-sm shadow-green-100"
-                      >
-                        <CheckCircle2 size={13} />
-                        <span>Resolvido</span>
-                      </button>
-                      <button
-                        onClick={() => handleResolveAlert(alert.id, 'false_positive')}
-                        className="flex-1 sm:flex-none px-3.5 py-2 bg-gray-400 hover:bg-gray-500 text-white text-[11px] font-black rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-sm"
-                      >
-                        <span>Falso Positivo</span>
-                      </button>
-                      <button
-                        onClick={() => navigate(`/clientes/${alert.customer_id}`)}
-                        className="flex-1 sm:flex-none px-3.5 py-2 bg-[#0E1B2B] hover:bg-[#1c3552] text-white text-[11px] font-black rounded-xl transition-colors cursor-pointer text-center whitespace-nowrap"
-                      >
-                        Perfil →
-                      </button>
+                    {/* RISCO pill */}
+                    <div className="bg-[#FCD8D4] text-[#D34135] px-4 py-1 rounded-lg text-[11px] font-extrabold ml-2 uppercase tracking-wider">
+                      Risco
+                    </div>
+                    {/* Red Circular Icon - approximating with an SVG */}
+                    <div className="ml-1">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D34135" strokeWidth="2.5" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10" stroke="#e5e7eb" strokeWidth="2.5" />
+                        <circle cx="12" cy="12" r="10" stroke="#D34135" strokeWidth="2.5" strokeDasharray="25 100" strokeDashoffset="25" />
+                      </svg>
                     </div>
                   </div>
 
+                  <div className="flex gap-3">
+                     <button
+                       onClick={() => handleResolveAlert(alert.id, 'resolved')}
+                       className="bg-[#3CDAB6] text-[#0E1B2B] font-extrabold text-xs px-6 py-2.5 rounded-lg hover:bg-[#2cb898] transition-colors cursor-pointer"
+                     >
+                       Resolver
+                     </button>
+                     <button
+                       onClick={() => handleResolveAlert(alert.id, 'false_positive')}
+                       className="bg-[#EAE5F3] text-[#0E1B2B] font-extrabold text-xs px-6 py-2.5 rounded-lg hover:bg-[#d8d0e5] transition-colors cursor-pointer"
+                     >
+                       Falso
+                     </button>
+                  </div>
                 </div>
-              );
-            })}
+
+                {/* Reason summary */}
+                <div className="mt-1 text-[13px] font-semibold text-[#0E1B2B]">
+                  {alert.category || 'Inatividade de 30 dias detectada'}
+                </div>
+
+                <div className="h-px bg-gray-200/50 w-full" />
+
+                {/* Full description */}
+                <div className="text-[12px] font-semibold text-gray-600 leading-relaxed">
+                  {alert.reason || 'Cliente não realiza login nem executa tarefas há 30 dias. Última sessão registrada em 08/03 com saída abrupta durante o cadastro da empresa.'}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
